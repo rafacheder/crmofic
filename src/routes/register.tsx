@@ -1,15 +1,45 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, Navigate } from "@tanstack/react-router";
 import { Wrench } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Route = createFileRoute("/register")({ component: RegisterPage });
 
 function RegisterPage() {
   const navigate = useNavigate();
+  const { signUp, user, loading } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [nomeOficina, setNomeOficina] = useState("");
+  const [nomeUsuario, setNomeUsuario] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  if (loading) return null;
+  if (user) return <Navigate to="/kanban" />;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      await signUp(nomeOficina, nomeUsuario, email, password);
+      toast.success("Conta criada! Verifique seu e-mail.");
+      navigate({ to: "/login" });
+    } catch (err: any) {
+      setError(err.message || "Erro ao criar conta");
+      toast.error("Erro ao criar conta: " + (err.message || "Verifique os dados informados"));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-8">
       <div className="w-full max-w-sm">
@@ -24,31 +54,49 @@ function RegisterPage() {
         </div>
         <Card>
           <CardContent className="pt-6">
-            <form
-              className="space-y-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                toast.success("Conta criada com sucesso!");
-                navigate({ to: "/kanban" });
-              }}
-            >
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-2">
                 <Label>Nome da Oficina</Label>
-                <Input required placeholder="Auto Center Silva" />
+                <Input 
+                  required 
+                  placeholder="Auto Center Silva" 
+                  value={nomeOficina}
+                  onChange={(e) => setNomeOficina(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Nome do Responsável</Label>
-                <Input required placeholder="João Silva" />
+                <Input 
+                  required 
+                  placeholder="João Silva" 
+                  value={nomeUsuario}
+                  onChange={(e) => setNomeUsuario(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
-                <Input type="email" required placeholder="voce@oficina.com" />
+                <Input 
+                  type="email" 
+                  required 
+                  placeholder="voce@oficina.com" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Senha</Label>
-                <Input type="password" required minLength={6} />
+                <Input 
+                  type="password" 
+                  required 
+                  minLength={6} 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
               </div>
-              <Button type="submit" className="w-full">Criar conta</Button>
+              {error && <p className="text-sm text-destructive font-medium">{error}</p>}
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Criando conta..." : "Criar conta"}
+              </Button>
               <p className="text-center text-sm text-muted-foreground">
                 Já tem conta?{" "}
                 <Link to="/login" className="text-primary hover:underline">Entrar</Link>

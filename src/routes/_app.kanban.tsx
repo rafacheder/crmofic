@@ -10,53 +10,61 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useStore, store } from "@/lib/store";
-import {
-  KANBAN_COLUMNS, type ColumnId, type Order, type Priority,
-  clientById, vehicleById, priorityMeta, budgetMeta, timeSince, initials, formatBRL,
-} from "@/lib/mock-data";
+import { useKanban } from "@/hooks/useKanban";
 import { OrderSheet } from "@/components/order-sheet";
 import { NewOrderDialog } from "@/components/new-order-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ServiceOrder } from "@/types/database";
 
 export const Route = createFileRoute("/_app/kanban")({ component: KanbanPage });
 
 function KanbanPage() {
-  const orders = useStore((s) => s.orders);
+  const { columns, orders, isLoading, moveCard } = useKanban();
   const [search, setSearch] = useState("");
-  const [priority, setPriority] = useState<Priority | "ALL">("ALL");
+  const [priority, setPriority] = useState<string>("ALL");
   const [openId, setOpenId] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
-  const [dragOver, setDragOver] = useState<ColumnId | null>(null);
+  const [fromColumnId, setFromColumnId] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState<string | null>(null);
 
   const filtered = useMemo(
     () =>
       orders.filter((o) => {
-        const cli = clientById(o.clientId);
-        const veh = vehicleById(o.vehicleId);
+        const cli = o.client;
+        const veh = o.vehicle;
         const term = search.toLowerCase();
         const matchSearch =
           !term ||
           cli?.name.toLowerCase().includes(term) ||
           veh?.plate.toLowerCase().includes(term) ||
-          o.number.toLowerCase().includes(term);
+          o.order_number.toLowerCase().includes(term);
         const matchP = priority === "ALL" || o.priority === priority;
         return matchSearch && matchP;
       }),
     [orders, search, priority]
   );
 
-  const handleDrop = (col: ColumnId) => {
-    if (!draggedId) return;
-    const o = orders.find((x) => x.id === draggedId);
-    if (o && o.column !== col) {
-      store.moveOrder(draggedId, col);
-      const colName = KANBAN_COLUMNS.find((c) => c.id === col)?.name;
-      toast.success(`${o.number} movido para ${colName}`);
+  const handleDrop = (colId: string) => {
+    if (!draggedId || !fromColumnId) return;
+    if (fromColumnId !== colId) {
+      moveCard(draggedId, fromColumnId, colId);
     }
     setDraggedId(null);
+    setFromColumnId(null);
     setDragOver(null);
   };
+
+  if (isLoading) {
+    return (
+      <div className="p-4 space-y-4">
+        <AppHeader title="Kanban" />
+        <div className="flex gap-4 overflow-x-auto">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-[600px] w-72 shrink-0" />)}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -72,14 +80,14 @@ function KanbanPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <Select value={priority} onValueChange={(v) => setPriority(v as Priority | "ALL")}>
+          <Select value={priority} onValueChange={setPriority}>
             <SelectTrigger className="w-40"><SelectValue placeholder="Prioridade" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">Todas prioridades</SelectItem>
-              <SelectItem value="LOW">Baixa</SelectItem>
-              <SelectItem value="NORMAL">Normal</SelectItem>
-              <SelectItem value="HIGH">Alta</SelectItem>
-              <SelectItem value="URGENT">Urgente</SelectItem>
+              <SelectItem value="low">Baixa</SelectItem>
+              <SelectItem value="medium">Normal</SelectItem>
+              <SelectItem value="high">Alta</SelectItem>
+              <SelectItem value="urgent">Urgente</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" size="icon" onClick={() => toast.success("Atualizado")}>
@@ -92,8 +100,8 @@ function KanbanPage() {
       </div>
 
       <div className="flex flex-1 gap-3 overflow-x-auto p-4">
-        {KANBAN_COLUMNS.map((col) => {
-          const cards = filtered.filter((o) => o.column === col.id);
+        {columns.map((col) => {
+          const cards = filtered.filter((o) => o.column_id === col.id);
           return (
             <div
               key={col.id}
@@ -118,7 +126,10 @@ function KanbanPage() {
                     key={o.id}
                     order={o}
                     onClick={() => setOpenId(o.id)}
-                    onDragStart={() => setDraggedId(o.id)}
+                    onDragStart={() => {
+                      setDraggedId(o.id);
+                      setFromColumnId(o.column_id);
+                    }}
                   />
                 ))}
                 {cards.length === 0 && (
@@ -140,9 +151,17 @@ function KanbanPage() {
 
 function OrderCard({
   order, onClick, onDragStart,
-}: { order: Order; onClick: () => void; onDragStart: () => void }) {
-  const cli = clientById(order.clientId);
-  const veh = vehicleById(order.vehicleId);
+}: { order: ServiceOrder; onClick: () => void; onDragStart: () => void }) {
+  const cli = order.client;
+  const veh = order.vehicle;
+  
+  const priorityColors: Record<string, string> = {
+    low: "bg-blue-100 text-blue-700",
+    medium: "bg-green-100 text-green-700",
+    high: "bg-orange-100 text-orange-700",
+    urgent: "bg-red-100 text-red-700",
+  };
+
   return (
     <div
       draggable
@@ -151,38 +170,32 @@ function OrderCard({
       className="group cursor-pointer rounded-md border bg-card p-3 shadow-sm transition hover:shadow-md"
     >
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-[11px] font-mono text-muted-foreground">{order.number}</span>
+        <span className="text-[11px] font-mono text-muted-foreground">{order.order_number}</span>
         <GripVertical className="h-3.5 w-3.5 text-muted-foreground/40 opacity-0 group-hover:opacity-100" />
       </div>
       <div className="mb-1 text-sm font-medium">{cli?.name}</div>
       <div className="mb-2 text-xs text-muted-foreground">
         {veh?.plate} • {veh?.brand} {veh?.model}
       </div>
-      {order.tags.length > 0 && (
-        <div className="mb-2 flex flex-wrap gap-1">
-          {order.tags.map((t) => (
-            <Badge key={t} variant="outline" className="h-5 px-1.5 text-[10px]">{t}</Badge>
-          ))}
-        </div>
-      )}
       <div className="mb-2 flex items-center gap-1.5">
-        <Badge className={`h-5 px-1.5 text-[10px] font-medium ${priorityMeta[order.priority].className}`} variant="secondary">
-          {priorityMeta[order.priority].label}
+        <Badge className={`h-5 px-1.5 text-[10px] font-medium ${priorityColors[order.priority]}`} variant="secondary">
+          {order.priority.toUpperCase()}
         </Badge>
-        <Badge className={`h-5 px-1.5 text-[10px] font-medium ${budgetMeta[order.budgetStatus].className}`} variant="secondary">
-          {order.budgetStatus}
+        <Badge className="h-5 px-1.5 text-[10px] font-medium" variant="outline">
+          {order.status.toUpperCase()}
         </Badge>
       </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <Avatar className="h-5 w-5">
             <AvatarFallback className="bg-primary text-primary-foreground text-[9px]">
-              {initials(order.technician)}
+              {cli?.name.substring(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <span className="text-[11px] text-muted-foreground">{timeSince(order.enteredColumnAt)}</span>
         </div>
-        <span className="text-xs font-semibold">{formatBRL(order.total)}</span>
+        <span className="text-xs font-semibold">
+          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(order.total_amount)}
+        </span>
       </div>
     </div>
   );
