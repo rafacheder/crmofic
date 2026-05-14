@@ -11,6 +11,7 @@ export function useOrdens() {
   const ordersQuery = useQuery({
     queryKey: ["orders", workshopId],
     queryFn: async () => {
+      if (!workshopId) return [];
       const { data, error } = await supabase
         .from("service_orders")
         .select(`
@@ -28,6 +29,8 @@ export function useOrdens() {
 
   const createOrderMutation = useMutation({
     mutationFn: async (newOrder: Partial<ServiceOrder>) => {
+      if (!workshopId) throw new Error("Workshop ID not found");
+      
       // Get count for sequence
       const { count } = await supabase
         .from("service_orders")

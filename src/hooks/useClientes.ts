@@ -11,6 +11,7 @@ export function useClientes() {
   const clientsQuery = useQuery({
     queryKey: ["clients", workshopId],
     queryFn: async () => {
+      if (!workshopId) return [];
       const { data, error } = await supabase
         .from("clients")
         .select(`
@@ -28,6 +29,7 @@ export function useClientes() {
 
   const createClientMutation = useMutation({
     mutationFn: async (newClient: Partial<Client>) => {
+      if (!workshopId) throw new Error("Workshop ID not found");
       const { data, error } = await supabase
         .from("clients")
         .insert({ ...newClient, workshop_id: workshopId })

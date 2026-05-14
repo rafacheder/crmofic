@@ -13,6 +13,7 @@ export function useKanban() {
   const columnsQuery = useQuery({
     queryKey: ["kanban_columns", workshopId],
     queryFn: async () => {
+      if (!workshopId) return [];
       const { data, error } = await supabase
         .from("kanban_columns")
         .select("*")
@@ -27,6 +28,7 @@ export function useKanban() {
   const ordersQuery = useQuery({
     queryKey: ["kanban_orders", workshopId],
     queryFn: async () => {
+      if (!workshopId) return [];
       const { data, error } = await supabase
         .from("service_orders")
         .select(`
@@ -44,6 +46,7 @@ export function useKanban() {
 
   const moveCardMutation = useMutation({
     mutationFn: async ({ orderId, fromColumnId, toColumnId }: { orderId: string, fromColumnId: string, toColumnId: string }) => {
+      if (!workshopId) throw new Error("Workshop ID not found");
       // 1. Update order column
       const { error: updateError } = await supabase
         .from("service_orders")
@@ -60,7 +63,7 @@ export function useKanban() {
           from_column_id: fromColumnId,
           to_column_id: toColumnId,
           action: "move",
-          description: `Movido para a coluna ${(await queryClient.fetchQuery({ queryKey: ["kanban_columns", workshopId] }) as KanbanColumn[]).find(c => c.id === toColumnId)?.name}`
+          description: "Movido entre colunas"
         });
       if (historyError) throw historyError;
     },
