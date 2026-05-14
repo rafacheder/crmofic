@@ -9,38 +9,232 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PortalTokenRouteImport } from './routes/portal.$token'
+import { Route as BudgetTokenRouteImport } from './routes/budget.$token'
+import { Route as BookSlugRouteImport } from './routes/book.$slug'
+import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppRemindersRouteImport } from './routes/_app.reminders'
+import { Route as AppOrdersRouteImport } from './routes/_app.orders'
+import { Route as AppKanbanRouteImport } from './routes/_app.kanban'
+import { Route as AppInboxRouteImport } from './routes/_app.inbox'
+import { Route as AppClientsRouteImport } from './routes/_app.clients'
+import { Route as AppCatalogRouteImport } from './routes/_app.catalog'
+import { Route as AppAppointmentsRouteImport } from './routes/_app.appointments'
 
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PortalTokenRoute = PortalTokenRouteImport.update({
+  id: '/portal/$token',
+  path: '/portal/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BudgetTokenRoute = BudgetTokenRouteImport.update({
+  id: '/budget/$token',
+  path: '/budget/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookSlugRoute = BookSlugRouteImport.update({
+  id: '/book/$slug',
+  path: '/book/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRemindersRoute = AppRemindersRouteImport.update({
+  id: '/reminders',
+  path: '/reminders',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrdersRoute = AppOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppKanbanRoute = AppKanbanRouteImport.update({
+  id: '/kanban',
+  path: '/kanban',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInboxRoute = AppInboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppClientsRoute = AppClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCatalogRoute = AppCatalogRouteImport.update({
+  id: '/catalog',
+  path: '/catalog',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppointmentsRoute = AppAppointmentsRouteImport.update({
+  id: '/appointments',
+  path: '/appointments',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/appointments': typeof AppAppointmentsRoute
+  '/catalog': typeof AppCatalogRoute
+  '/clients': typeof AppClientsRoute
+  '/inbox': typeof AppInboxRoute
+  '/kanban': typeof AppKanbanRoute
+  '/orders': typeof AppOrdersRoute
+  '/reminders': typeof AppRemindersRoute
+  '/settings': typeof AppSettingsRoute
+  '/book/$slug': typeof BookSlugRoute
+  '/budget/$token': typeof BudgetTokenRoute
+  '/portal/$token': typeof PortalTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/appointments': typeof AppAppointmentsRoute
+  '/catalog': typeof AppCatalogRoute
+  '/clients': typeof AppClientsRoute
+  '/inbox': typeof AppInboxRoute
+  '/kanban': typeof AppKanbanRoute
+  '/orders': typeof AppOrdersRoute
+  '/reminders': typeof AppRemindersRoute
+  '/settings': typeof AppSettingsRoute
+  '/book/$slug': typeof BookSlugRoute
+  '/budget/$token': typeof BudgetTokenRoute
+  '/portal/$token': typeof PortalTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/_app/appointments': typeof AppAppointmentsRoute
+  '/_app/catalog': typeof AppCatalogRoute
+  '/_app/clients': typeof AppClientsRoute
+  '/_app/inbox': typeof AppInboxRoute
+  '/_app/kanban': typeof AppKanbanRoute
+  '/_app/orders': typeof AppOrdersRoute
+  '/_app/reminders': typeof AppRemindersRoute
+  '/_app/settings': typeof AppSettingsRoute
+  '/book/$slug': typeof BookSlugRoute
+  '/budget/$token': typeof BudgetTokenRoute
+  '/portal/$token': typeof PortalTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/register'
+    | '/appointments'
+    | '/catalog'
+    | '/clients'
+    | '/inbox'
+    | '/kanban'
+    | '/orders'
+    | '/reminders'
+    | '/settings'
+    | '/book/$slug'
+    | '/budget/$token'
+    | '/portal/$token'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/login'
+    | '/register'
+    | '/appointments'
+    | '/catalog'
+    | '/clients'
+    | '/inbox'
+    | '/kanban'
+    | '/orders'
+    | '/reminders'
+    | '/settings'
+    | '/book/$slug'
+    | '/budget/$token'
+    | '/portal/$token'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/login'
+    | '/register'
+    | '/_app/appointments'
+    | '/_app/catalog'
+    | '/_app/clients'
+    | '/_app/inbox'
+    | '/_app/kanban'
+    | '/_app/orders'
+    | '/_app/reminders'
+    | '/_app/settings'
+    | '/book/$slug'
+    | '/budget/$token'
+    | '/portal/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
+  BookSlugRoute: typeof BookSlugRoute
+  BudgetTokenRoute: typeof BudgetTokenRoute
+  PortalTokenRoute: typeof PortalTokenRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +242,119 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/portal/$token': {
+      id: '/portal/$token'
+      path: '/portal/$token'
+      fullPath: '/portal/$token'
+      preLoaderRoute: typeof PortalTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/budget/$token': {
+      id: '/budget/$token'
+      path: '/budget/$token'
+      fullPath: '/budget/$token'
+      preLoaderRoute: typeof BudgetTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/book/$slug': {
+      id: '/book/$slug'
+      path: '/book/$slug'
+      fullPath: '/book/$slug'
+      preLoaderRoute: typeof BookSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/reminders': {
+      id: '/_app/reminders'
+      path: '/reminders'
+      fullPath: '/reminders'
+      preLoaderRoute: typeof AppRemindersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/orders': {
+      id: '/_app/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof AppOrdersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/kanban': {
+      id: '/_app/kanban'
+      path: '/kanban'
+      fullPath: '/kanban'
+      preLoaderRoute: typeof AppKanbanRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/inbox': {
+      id: '/_app/inbox'
+      path: '/inbox'
+      fullPath: '/inbox'
+      preLoaderRoute: typeof AppInboxRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/clients': {
+      id: '/_app/clients'
+      path: '/clients'
+      fullPath: '/clients'
+      preLoaderRoute: typeof AppClientsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/catalog': {
+      id: '/_app/catalog'
+      path: '/catalog'
+      fullPath: '/catalog'
+      preLoaderRoute: typeof AppCatalogRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/appointments': {
+      id: '/_app/appointments'
+      path: '/appointments'
+      fullPath: '/appointments'
+      preLoaderRoute: typeof AppAppointmentsRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppAppointmentsRoute: typeof AppAppointmentsRoute
+  AppCatalogRoute: typeof AppCatalogRoute
+  AppClientsRoute: typeof AppClientsRoute
+  AppInboxRoute: typeof AppInboxRoute
+  AppKanbanRoute: typeof AppKanbanRoute
+  AppOrdersRoute: typeof AppOrdersRoute
+  AppRemindersRoute: typeof AppRemindersRoute
+  AppSettingsRoute: typeof AppSettingsRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppAppointmentsRoute: AppAppointmentsRoute,
+  AppCatalogRoute: AppCatalogRoute,
+  AppClientsRoute: AppClientsRoute,
+  AppInboxRoute: AppInboxRoute,
+  AppKanbanRoute: AppKanbanRoute,
+  AppOrdersRoute: AppOrdersRoute,
+  AppRemindersRoute: AppRemindersRoute,
+  AppSettingsRoute: AppSettingsRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
+  LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
+  BookSlugRoute: BookSlugRoute,
+  BudgetTokenRoute: BudgetTokenRoute,
+  PortalTokenRoute: PortalTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
