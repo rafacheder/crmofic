@@ -17,6 +17,7 @@ import {
   type CatalogProduct,
   type ColumnId,
   KANBAN_COLUMNS,
+  type KanbanAutomation,
 } from "./mock-data";
 
 interface State {
@@ -114,8 +115,11 @@ export const store = {
     state = { ...state, products: [p, ...state.products] };
     emit();
   },
-  removeProduct: (id: string) => {
-    state = { ...state, products: state.products.filter((p) => p.id !== id) };
+  updateColumnAutomations: (columnId: ColumnId, automations: KanbanAutomation[]) => {
+    state = {
+      ...state,
+      columns: state.columns.map((c) => (c.id === columnId ? { ...c, automations } : c)),
+    };
     emit();
   },
 };
