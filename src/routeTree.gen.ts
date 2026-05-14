@@ -13,6 +13,9 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PortalTokenRouteImport } from './routes/portal.$token'
+import { Route as BudgetTokenRouteImport } from './routes/budget.$token'
+import { Route as BookSlugRouteImport } from './routes/book.$slug'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppRemindersRouteImport } from './routes/_app.reminders'
 import { Route as AppOrdersRouteImport } from './routes/_app.orders'
@@ -39,6 +42,21 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalTokenRoute = PortalTokenRouteImport.update({
+  id: '/portal/$token',
+  path: '/portal/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BudgetTokenRoute = BudgetTokenRouteImport.update({
+  id: '/budget/$token',
+  path: '/budget/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookSlugRoute = BookSlugRouteImport.update({
+  id: '/book/$slug',
+  path: '/book/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -94,6 +112,9 @@ export interface FileRoutesByFullPath {
   '/orders': typeof AppOrdersRoute
   '/reminders': typeof AppRemindersRoute
   '/settings': typeof AppSettingsRoute
+  '/book/$slug': typeof BookSlugRoute
+  '/budget/$token': typeof BudgetTokenRoute
+  '/portal/$token': typeof PortalTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -107,6 +128,9 @@ export interface FileRoutesByTo {
   '/orders': typeof AppOrdersRoute
   '/reminders': typeof AppRemindersRoute
   '/settings': typeof AppSettingsRoute
+  '/book/$slug': typeof BookSlugRoute
+  '/budget/$token': typeof BudgetTokenRoute
+  '/portal/$token': typeof PortalTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -122,6 +146,9 @@ export interface FileRoutesById {
   '/_app/orders': typeof AppOrdersRoute
   '/_app/reminders': typeof AppRemindersRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/book/$slug': typeof BookSlugRoute
+  '/budget/$token': typeof BudgetTokenRoute
+  '/portal/$token': typeof PortalTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -137,6 +164,9 @@ export interface FileRouteTypes {
     | '/orders'
     | '/reminders'
     | '/settings'
+    | '/book/$slug'
+    | '/budget/$token'
+    | '/portal/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -150,6 +180,9 @@ export interface FileRouteTypes {
     | '/orders'
     | '/reminders'
     | '/settings'
+    | '/book/$slug'
+    | '/budget/$token'
+    | '/portal/$token'
   id:
     | '__root__'
     | '/'
@@ -164,6 +197,9 @@ export interface FileRouteTypes {
     | '/_app/orders'
     | '/_app/reminders'
     | '/_app/settings'
+    | '/book/$slug'
+    | '/budget/$token'
+    | '/portal/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -171,6 +207,9 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  BookSlugRoute: typeof BookSlugRoute
+  BudgetTokenRoute: typeof BudgetTokenRoute
+  PortalTokenRoute: typeof PortalTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -201,6 +240,27 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal/$token': {
+      id: '/portal/$token'
+      path: '/portal/$token'
+      fullPath: '/portal/$token'
+      preLoaderRoute: typeof PortalTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/budget/$token': {
+      id: '/budget/$token'
+      path: '/budget/$token'
+      fullPath: '/budget/$token'
+      preLoaderRoute: typeof BudgetTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/book/$slug': {
+      id: '/book/$slug'
+      path: '/book/$slug'
+      fullPath: '/book/$slug'
+      preLoaderRoute: typeof BookSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/settings': {
@@ -291,6 +351,9 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  BookSlugRoute: BookSlugRoute,
+  BudgetTokenRoute: BudgetTokenRoute,
+  PortalTokenRoute: PortalTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
