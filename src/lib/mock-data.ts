@@ -10,10 +10,19 @@ export type ColumnId =
   | "pronto"
   | "entregue";
 
+export interface KanbanAutomation {
+  id: string;
+  trigger: "Ao Entrar" | "Ao Sair" | "Tempo na Coluna";
+  action: "Enviar WhatsApp" | "Enviar Email" | "Notificar Técnico" | "Webhook";
+  templateId: string;
+  timeLimit?: number; // in minutes
+}
+
 export interface KanbanColumn {
   id: ColumnId;
   name: string;
   color: string;
+  automations?: KanbanAutomation[];
 }
 
 export const KANBAN_COLUMNS: KanbanColumn[] = [
