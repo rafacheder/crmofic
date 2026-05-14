@@ -115,6 +115,10 @@ export const store = {
     state = { ...state, products: [p, ...state.products] };
     emit();
   },
+  removeProduct: (id: string) => {
+    state = { ...state, products: state.products.filter((p) => p.id !== id) };
+    emit();
+  },
   updateColumnAutomations: (columnId: ColumnId, automations: KanbanAutomation[]) => {
     state = {
       ...state,
