@@ -800,15 +800,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      criar_oficina_e_usuario: {
-        Args: {
-          p_email: string
-          p_nome_oficina: string
-          p_nome_usuario: string
-          p_user_id: string
-        }
-        Returns: string
-      }
       get_oficina_id: { Args: never; Returns: string }
     }
     Enums: {
