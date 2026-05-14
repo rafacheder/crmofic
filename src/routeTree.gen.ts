@@ -13,7 +13,9 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppOrdersRouteImport } from './routes/_app.orders'
 import { Route as AppKanbanRouteImport } from './routes/_app.kanban'
+import { Route as AppClientsRouteImport } from './routes/_app.clients'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -34,9 +36,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppOrdersRoute = AppOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppKanbanRoute = AppKanbanRouteImport.update({
   id: '/kanban',
   path: '/kanban',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppClientsRoute = AppClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
   getParentRoute: () => AppRoute,
 } as any)
 
@@ -44,13 +56,17 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/clients': typeof AppClientsRoute
   '/kanban': typeof AppKanbanRoute
+  '/orders': typeof AppOrdersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/clients': typeof AppClientsRoute
   '/kanban': typeof AppKanbanRoute
+  '/orders': typeof AppOrdersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -58,14 +74,24 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/_app/clients': typeof AppClientsRoute
   '/_app/kanban': typeof AppKanbanRoute
+  '/_app/orders': typeof AppOrdersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/register' | '/kanban'
+  fullPaths: '/' | '/login' | '/register' | '/clients' | '/kanban' | '/orders'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/register' | '/kanban'
-  id: '__root__' | '/' | '/_app' | '/login' | '/register' | '/_app/kanban'
+  to: '/' | '/login' | '/register' | '/clients' | '/kanban' | '/orders'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/login'
+    | '/register'
+    | '/_app/clients'
+    | '/_app/kanban'
+    | '/_app/orders'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -105,6 +131,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/orders': {
+      id: '/_app/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof AppOrdersRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/kanban': {
       id: '/_app/kanban'
       path: '/kanban'
@@ -112,15 +145,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppKanbanRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/clients': {
+      id: '/_app/clients'
+      path: '/clients'
+      fullPath: '/clients'
+      preLoaderRoute: typeof AppClientsRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppClientsRoute: typeof AppClientsRoute
   AppKanbanRoute: typeof AppKanbanRoute
+  AppOrdersRoute: typeof AppOrdersRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppClientsRoute: AppClientsRoute,
   AppKanbanRoute: AppKanbanRoute,
+  AppOrdersRoute: AppOrdersRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
