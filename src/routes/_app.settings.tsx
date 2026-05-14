@@ -16,6 +16,8 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useStore, store } from "@/lib/store";
 import { toast } from "sonner";
+import { ColumnAutomationsDialog } from "@/components/column-automations-dialog";
+import { type KanbanColumn } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_app/settings")({ component: SettingsPage });
 
@@ -80,12 +82,20 @@ function GeneralTab() {
 
 function KanbanTab() {
   const cols = useStore((s) => s.columns);
+  const [selectedCol, setSelectedCol] = useState<KanbanColumn | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div><CardTitle>Colunas do Kanban</CardTitle><CardDescription>Reordene, edite ou adicione colunas e automações.</CardDescription></div>
-          <Button size="sm"><Plus className="mr-1 h-4 w-4" /> Adicionar coluna</Button>
+          <div>
+            <CardTitle>Colunas do Kanban</CardTitle>
+            <CardDescription>Reordene, edite ou adicione colunas e automações.</CardDescription>
+          </div>
+          <Button size="sm">
+            <Plus className="mr-1 h-4 w-4" /> Adicionar coluna
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
@@ -94,21 +104,36 @@ function KanbanTab() {
             <GripVertical className="h-4 w-4 text-muted-foreground" />
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: c.color }} />
             <span className="flex-1 text-sm font-medium">{c.name}</span>
-            <Button variant="outline" size="sm">Automações</Button>
-            <Button variant="outline" size="sm">Editar</Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSelectedCol(c);
+                setDialogOpen(true);
+              }}
+            >
+              Automações
+              {c.automations && c.automations.length > 0 && (
+                <Badge variant="secondary" className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px]">
+                  {c.automations.length}
+                </Badge>
+              )}
+            </Button>
+            <Button variant="outline" size="sm">
+              Editar
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
           </div>
         ))}
-        <Separator className="my-3" />
-        <div className="rounded-md border bg-muted/30 p-4">
-          <h4 className="mb-2 text-sm font-medium">Exemplo de automação</h4>
-          <div className="grid grid-cols-3 gap-3 text-sm">
-            <div><Label className="text-xs">Trigger</Label><Input defaultValue="Ao Entrar" /></div>
-            <div><Label className="text-xs">Ação</Label><Input defaultValue="Enviar WhatsApp" /></div>
-            <div><Label className="text-xs">Template</Label><Input defaultValue="Notificação de status" /></div>
-          </div>
-        </div>
       </CardContent>
+
+      <ColumnAutomationsDialog
+        column={selectedCol}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+      />
     </Card>
   );
 }
