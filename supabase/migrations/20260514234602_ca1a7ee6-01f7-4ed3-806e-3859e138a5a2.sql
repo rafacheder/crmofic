@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.criar_oficina_e_usuario(text,text,text,uuid);
