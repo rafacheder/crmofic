@@ -30,9 +30,18 @@ export function useClientes() {
   const createClientMutation = useMutation({
     mutationFn: async (newClient: Partial<Client>) => {
       if (!workshopId) throw new Error("Workshop ID not found");
+      if (!newClient.name || !newClient.phone) throw new Error("Nome e telefone são obrigatórios");
+
       const { data, error } = await supabase
         .from("clients")
-        .insert({ ...newClient, workshop_id: workshopId })
+        .insert({ 
+          name: newClient.name,
+          phone: newClient.phone,
+          email: newClient.email,
+          document: newClient.document,
+          address: newClient.address,
+          workshop_id: workshopId 
+        })
         .select()
         .single();
       if (error) throw error;

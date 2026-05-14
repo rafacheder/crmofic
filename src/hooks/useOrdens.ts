@@ -30,6 +30,7 @@ export function useOrdens() {
   const createOrderMutation = useMutation({
     mutationFn: async (newOrder: Partial<ServiceOrder>) => {
       if (!workshopId) throw new Error("Workshop ID not found");
+      if (!newOrder.client_id || !newOrder.vehicle_id) throw new Error("Cliente e veículo são obrigatórios");
       
       // Get count for sequence
       const { count } = await supabase
@@ -42,9 +43,16 @@ export function useOrdens() {
       const { data, error } = await supabase
         .from("service_orders")
         .insert({
-          ...newOrder,
           workshop_id: workshopId,
+          client_id: newOrder.client_id,
+          vehicle_id: newOrder.vehicle_id,
+          column_id: newOrder.column_id,
           order_number: orderNumber,
+          status: newOrder.status || 'open',
+          priority: newOrder.priority || 'medium',
+          description: newOrder.description,
+          total_amount: newOrder.total_amount || 0,
+          technician_id: newOrder.technician_id,
         })
         .select()
         .single();
