@@ -14,7 +14,7 @@ import { useKanban } from "@/hooks/useKanban";
 import { OrderSheet } from "@/components/order-sheet";
 import { NewOrderDialog } from "@/components/new-order-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ServiceOrder } from "@/types/database";
+import { OrdemServico } from "@/types/database";
 
 export const Route = createFileRoute("/_app/kanban")({ component: KanbanPage });
 
@@ -31,15 +31,15 @@ function KanbanPage() {
   const filtered = useMemo(
     () =>
       orders.filter((o) => {
-        const cli = o.client;
-        const veh = o.vehicle;
+        const cli = o.cliente;
+        const veh = o.veiculo;
         const term = search.toLowerCase();
         const matchSearch =
           !term ||
-          cli?.name.toLowerCase().includes(term) ||
-          veh?.plate.toLowerCase().includes(term) ||
-          o.order_number.toLowerCase().includes(term);
-        const matchP = priority === "ALL" || o.priority === priority;
+          cli?.nome?.toLowerCase().includes(term) ||
+          veh?.placa?.toLowerCase().includes(term) ||
+          o.numero?.toLowerCase().includes(term);
+        const matchP = priority === "ALL" || o.prioridade === priority;
         return matchSearch && matchP;
       }),
     [orders, search, priority]
@@ -84,10 +84,10 @@ function KanbanPage() {
             <SelectTrigger className="w-40"><SelectValue placeholder="Prioridade" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">Todas prioridades</SelectItem>
-              <SelectItem value="low">Baixa</SelectItem>
-              <SelectItem value="medium">Normal</SelectItem>
-              <SelectItem value="high">Alta</SelectItem>
-              <SelectItem value="urgent">Urgente</SelectItem>
+              <SelectItem value="LOW">Baixa</SelectItem>
+              <SelectItem value="NORMAL">Normal</SelectItem>
+              <SelectItem value="HIGH">Alta</SelectItem>
+              <SelectItem value="URGENT">Urgente</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" size="icon" onClick={() => toast.success("Atualizado")}>
@@ -101,7 +101,7 @@ function KanbanPage() {
 
       <div className="flex flex-1 gap-3 overflow-x-auto p-4">
         {columns.map((col) => {
-          const cards = filtered.filter((o) => o.column_id === col.id);
+          const cards = filtered.filter((o) => o.coluna_id === col.id);
           return (
             <div
               key={col.id}
@@ -112,8 +112,8 @@ function KanbanPage() {
             >
               <div className="flex items-center justify-between border-b bg-background/60 px-3 py-2">
                 <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full" style={{ background: col.color }} />
-                  <span className="text-sm font-medium">{col.name}</span>
+                  <span className="h-2 w-2 rounded-full" style={{ background: col.cor ?? "#6b7280" }} />
+                  <span className="text-sm font-medium">{col.nome}</span>
                   <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{cards.length}</Badge>
                 </div>
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setNewOpen(true)}>
@@ -128,7 +128,7 @@ function KanbanPage() {
                     onClick={() => setOpenId(o.id)}
                     onDragStart={() => {
                       setDraggedId(o.id);
-                      setFromColumnId(o.column_id);
+                      setFromColumnId(o.coluna_id);
                     }}
                   />
                 ))}
@@ -151,16 +151,19 @@ function KanbanPage() {
 
 function OrderCard({
   order, onClick, onDragStart,
-}: { order: ServiceOrder; onClick: () => void; onDragStart: () => void }) {
-  const cli = order.client;
-  const veh = order.vehicle;
-  
+}: { order: OrdemServico; onClick: () => void; onDragStart: () => void }) {
+  const cli = order.cliente;
+  const veh = order.veiculo;
+
   const priorityColors: Record<string, string> = {
-    low: "bg-blue-100 text-blue-700",
-    medium: "bg-green-100 text-green-700",
-    high: "bg-orange-100 text-orange-700",
-    urgent: "bg-red-100 text-red-700",
+    LOW: "bg-blue-100 text-blue-700",
+    NORMAL: "bg-green-100 text-green-700",
+    HIGH: "bg-orange-100 text-orange-700",
+    URGENT: "bg-red-100 text-red-700",
   };
+
+  const prio = (order.prioridade ?? "NORMAL").toUpperCase();
+  const cliNome = cli?.nome ?? "—";
 
   return (
     <div
@@ -170,31 +173,33 @@ function OrderCard({
       className="group cursor-pointer rounded-md border bg-card p-3 shadow-sm transition hover:shadow-md"
     >
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-[11px] font-mono text-muted-foreground">{order.order_number}</span>
+        <span className="text-[11px] font-mono text-muted-foreground">{order.numero}</span>
         <GripVertical className="h-3.5 w-3.5 text-muted-foreground/40 opacity-0 group-hover:opacity-100" />
       </div>
-      <div className="mb-1 text-sm font-medium">{cli?.name}</div>
+      <div className="mb-1 text-sm font-medium">{cliNome}</div>
       <div className="mb-2 text-xs text-muted-foreground">
-        {veh?.plate} • {veh?.brand} {veh?.model}
+        {veh?.placa} • {veh?.marca} {veh?.modelo}
       </div>
       <div className="mb-2 flex items-center gap-1.5">
-        <Badge className={`h-5 px-1.5 text-[10px] font-medium ${priorityColors[order.priority]}`} variant="secondary">
-          {order.priority.toUpperCase()}
+        <Badge className={`h-5 px-1.5 text-[10px] font-medium ${priorityColors[prio] ?? ""}`} variant="secondary">
+          {prio}
         </Badge>
-        <Badge className="h-5 px-1.5 text-[10px] font-medium" variant="outline">
-          {order.status.toUpperCase()}
-        </Badge>
+        {order.status_orcamento && (
+          <Badge className="h-5 px-1.5 text-[10px] font-medium" variant="outline">
+            {order.status_orcamento}
+          </Badge>
+        )}
       </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <Avatar className="h-5 w-5">
             <AvatarFallback className="bg-primary text-primary-foreground text-[9px]">
-              {cli?.name.substring(0, 2).toUpperCase()}
+              {cliNome.substring(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
         </div>
         <span className="text-xs font-semibold">
-          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(order.total_amount)}
+          {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(order.valor_total ?? 0)}
         </span>
       </div>
     </div>
