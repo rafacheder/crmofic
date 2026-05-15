@@ -1,77 +1,85 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useWorkshopId } from "./useWorkshopId";
-import { ServiceOrder } from "@/types/database";
+import { useAuth } from "@/contexts/AuthContext";
+import { OrdemServico } from "@/types/database";
 import { toast } from "sonner";
 
 export function useOrdens() {
-  const workshopId = useWorkshopId();
+  const { oficinaId } = useAuth();
   const queryClient = useQueryClient();
 
-  const ordersQuery = useQuery({
-    queryKey: ["orders", workshopId],
+  const ordensQuery = useQuery({
+    queryKey: ["ordens_servico", oficinaId],
+    enabled: !!oficinaId,
     queryFn: async () => {
-      if (!workshopId) return [];
+      if (!oficinaId) return [];
       const { data, error } = await supabase
-        .from("service_orders")
+        .from("ordens_servico")
         .select(`
           *,
-          client:clients(*),
-          vehicle:vehicles(*)
+          cliente:clientes(*),
+          veiculo:veiculos(*)
         `)
-        .eq("workshop_id", workshopId)
+        .eq("oficina_id", oficinaId)
         .order("created_at", { ascending: false });
+      console.log("[useOrdens] ordens:", data, "erro:", error);
       if (error) throw error;
-      return data as ServiceOrder[];
+      return (data ?? []) as unknown as OrdemServico[];
     },
-    enabled: !!workshopId,
   });
 
   const createOrderMutation = useMutation({
-    mutationFn: async (newOrder: Partial<ServiceOrder>) => {
-      if (!workshopId) throw new Error("Workshop ID not found");
-      if (!newOrder.client_id || !newOrder.vehicle_id) throw new Error("Cliente e veículo são obrigatórios");
-      
-      // Get count for sequence
-      const { count } = await supabase
-        .from("service_orders")
-        .select("*", { count: 'exact', head: true })
-        .eq("workshop_id", workshopId);
-      
-      const orderNumber = `OS-${new Date().getFullYear()}-${String((count || 0) + 1).padStart(4, '0')}`;
-      
+    mutationFn: async (nova: Partial<OrdemServico>) => {
+      if (!oficinaId) throw new Error("Oficina não identificada");
+      if (!nova.cliente_id || !nova.veiculo_id) {
+        throw new Error("Cliente e veículo são obrigatórios");
+      }
+
+      const { count, error: countErr } = await supabase
+        .from("ordens_servico")
+        .select("*", { count: "exact", head: true })
+        .eq("oficina_id", oficinaId);
+      if (countErr) throw countErr;
+
+      const numero = `OS-${new Date().getFullYear()}-${String((count ?? 0) + 1).padStart(4, "0")}`;
+
+      const payload = {
+        oficina_id: oficinaId,
+        numero,
+        cliente_id: nova.cliente_id,
+        veiculo_id: nova.veiculo_id,
+        coluna_id: nova.coluna_id ?? null,
+        tecnico_id: nova.tecnico_id ?? null,
+        prioridade: nova.prioridade ?? "NORMAL",
+        status_orcamento: nova.status_orcamento ?? "PENDENTE",
+        reclamacao: nova.reclamacao ?? null,
+        observacoes: nova.observacoes ?? null,
+        valor_total: nova.valor_total ?? 0,
+        km_entrada: nova.km_entrada ?? null,
+        data_agendada: nova.data_agendada ?? null,
+      };
+
       const { data, error } = await supabase
-        .from("service_orders")
-        .insert({
-          workshop_id: workshopId,
-          client_id: newOrder.client_id,
-          vehicle_id: newOrder.vehicle_id,
-          column_id: newOrder.column_id,
-          order_number: orderNumber,
-          status: newOrder.status || 'open',
-          priority: newOrder.priority || 'medium',
-          description: newOrder.description,
-          total_amount: newOrder.total_amount || 0,
-          technician_id: newOrder.technician_id,
-        })
+        .from("ordens_servico")
+        .insert(payload)
         .select()
         .single();
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
-      queryClient.invalidateQueries({ queryKey: ["kanban_orders"] });
+      queryClient.invalidateQueries({ queryKey: ["ordens_servico"] });
+      queryClient.invalidateQueries({ queryKey: ["kanban_ordens"] });
       toast.success("Ordem de serviço criada");
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error("Erro ao criar ordem: " + error.message);
-    }
+    },
   });
 
   return {
-    orders: ordersQuery.data || [],
-    isLoading: ordersQuery.isLoading,
+    orders: ordensQuery.data ?? [],
+    isLoading: ordensQuery.isLoading,
     createOrder: createOrderMutation.mutateAsync,
   };
 }
