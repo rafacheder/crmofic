@@ -101,7 +101,7 @@ export function AppSidebar() {
             <DropdownMenuItem><User className="mr-2 h-4 w-4" /> Perfil</DropdownMenuItem>
             <DropdownMenuItem asChild><Link to="/settings"><Settings className="mr-2 h-4 w-4" /> Configurações</Link></DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild><Link to="/login"><LogOut className="mr-2 h-4 w-4" /> Sair</Link></DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleSignOut}><LogOut className="mr-2 h-4 w-4" /> Sair</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarFooter>
