@@ -31,6 +31,18 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const path = useRouterState({ select: (r) => r.location.pathname });
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success("Sessão encerrada");
+      navigate({ to: "/login" });
+    } catch (e) {
+      toast.error("Erro ao sair");
+    }
+  };
 
   return (
     <Sidebar collapsible="icon" className="border-r">
