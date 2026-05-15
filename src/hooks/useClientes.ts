@@ -1,46 +1,49 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useWorkshopId } from "./useWorkshopId";
-import { Client } from "@/types/database";
+import { useAuth } from "@/contexts/AuthContext";
+import { Cliente } from "@/types/database";
 import { toast } from "sonner";
 
 export function useClientes() {
-  const workshopId = useWorkshopId();
+  const { oficinaId } = useAuth();
   const queryClient = useQueryClient();
 
-  const clientsQuery = useQuery({
-    queryKey: ["clients", workshopId],
+  const clientesQuery = useQuery({
+    queryKey: ["clientes", oficinaId],
+    enabled: !!oficinaId,
     queryFn: async () => {
-      if (!workshopId) return [];
+      if (!oficinaId) return [];
       const { data, error } = await supabase
-        .from("clients")
+        .from("clientes")
         .select(`
           *,
-          vehicles(count),
-          service_orders(count)
+          veiculos(count),
+          ordens_servico(count)
         `)
-        .eq("workshop_id", workshopId)
-        .order("name");
+        .eq("oficina_id", oficinaId)
+        .order("nome");
+      console.log("[useClientes] clientes:", data, "erro:", error);
       if (error) throw error;
-      return data as any[];
+      return (data ?? []) as unknown as (Cliente & { veiculos: { count: number }[]; ordens_servico: { count: number }[] })[];
     },
-    enabled: !!workshopId,
   });
 
   const createClientMutation = useMutation({
-    mutationFn: async (newClient: Partial<Client>) => {
-      if (!workshopId) throw new Error("Workshop ID not found");
-      if (!newClient.name || !newClient.phone) throw new Error("Nome e telefone são obrigatórios");
+    mutationFn: async (novo: Partial<Cliente>) => {
+      if (!oficinaId) throw new Error("Oficina não identificada");
+      if (!novo.nome || !novo.telefone) {
+        throw new Error("Nome e telefone são obrigatórios");
+      }
 
       const { data, error } = await supabase
-        .from("clients")
-        .insert({ 
-          name: newClient.name,
-          phone: newClient.phone,
-          email: newClient.email,
-          document: newClient.document,
-          address: newClient.address,
-          workshop_id: workshopId 
+        .from("clientes")
+        .insert({
+          oficina_id: oficinaId,
+          nome: novo.nome,
+          telefone: novo.telefone,
+          email: novo.email ?? null,
+          cpf_cnpj: novo.cpf_cnpj ?? null,
+          endereco: novo.endereco ?? null,
         })
         .select()
         .single();
@@ -48,14 +51,17 @@ export function useClientes() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      queryClient.invalidateQueries({ queryKey: ["clientes"] });
       toast.success("Cliente cadastrado");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao cadastrar cliente: " + error.message);
     },
   });
 
   return {
-    clients: clientsQuery.data || [],
-    isLoading: clientsQuery.isLoading,
+    clients: clientesQuery.data ?? [],
+    isLoading: clientesQuery.isLoading,
     createClient: createClientMutation.mutateAsync,
   };
 }

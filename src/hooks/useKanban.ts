@@ -1,86 +1,85 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useWorkshopId } from "./useWorkshopId";
-import { KanbanColumn, ServiceOrder } from "@/types/database";
-import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { KanbanColuna, OrdemServico } from "@/types/database";
+import { toast } from "sonner";
 
 export function useKanban() {
-  const workshopId = useWorkshopId();
-  const { profile } = useAuth();
+  const { oficinaId, user } = useAuth();
   const queryClient = useQueryClient();
 
-  const columnsQuery = useQuery({
-    queryKey: ["kanban_columns", workshopId],
+  const colunasQuery = useQuery({
+    queryKey: ["kanban_colunas", oficinaId],
+    enabled: !!oficinaId,
     queryFn: async () => {
-      if (!workshopId) return [];
+      if (!oficinaId) return [];
       const { data, error } = await supabase
-        .from("kanban_columns")
+        .from("kanban_colunas")
         .select("*")
-        .eq("workshop_id", workshopId)
-        .order("position");
+        .eq("oficina_id", oficinaId)
+        .order("ordem");
+      console.log("[useKanban] colunas:", data, "erro:", error);
       if (error) throw error;
-      return data as KanbanColumn[];
+      return (data ?? []) as unknown as KanbanColuna[];
     },
-    enabled: !!workshopId,
   });
 
-  const ordersQuery = useQuery({
-    queryKey: ["kanban_orders", workshopId],
+  const ordensQuery = useQuery({
+    queryKey: ["kanban_ordens", oficinaId],
+    enabled: !!oficinaId,
     queryFn: async () => {
-      if (!workshopId) return [];
+      if (!oficinaId) return [];
       const { data, error } = await supabase
-        .from("service_orders")
+        .from("ordens_servico")
         .select(`
           *,
-          client:clients(*),
-          vehicle:vehicles(*)
+          cliente:clientes(*),
+          veiculo:veiculos(*)
         `)
-        .eq("workshop_id", workshopId)
-        .neq("status", "closed");
+        .eq("oficina_id", oficinaId);
+      console.log("[useKanban] ordens:", data, "erro:", error);
       if (error) throw error;
-      return data as ServiceOrder[];
+      return (data ?? []) as unknown as OrdemServico[];
     },
-    enabled: !!workshopId,
   });
 
   const moveCardMutation = useMutation({
-    mutationFn: async ({ orderId, fromColumnId, toColumnId }: { orderId: string, fromColumnId: string, toColumnId: string }) => {
-      if (!workshopId) throw new Error("Workshop ID not found");
-      // 1. Update order column
-      const { error: updateError } = await supabase
-        .from("service_orders")
-        .update({ column_id: toColumnId })
-        .eq("id", orderId);
-      if (updateError) throw updateError;
+    mutationFn: async ({
+      ordemId, fromColunaId, toColunaId,
+    }: { ordemId: string; fromColunaId: string; toColunaId: string }) => {
+      if (!oficinaId) throw new Error("Oficina não identificada");
 
-      // 2. Log history
-      const { error: historyError } = await supabase
-        .from("order_history")
+      const { error: updErr } = await supabase
+        .from("ordens_servico")
+        .update({ coluna_id: toColunaId })
+        .eq("id", ordemId)
+        .eq("oficina_id", oficinaId);
+      if (updErr) throw updErr;
+
+      const { error: histErr } = await supabase
+        .from("os_historico")
         .insert({
-          order_id: orderId,
-          user_id: profile?.id,
-          from_column_id: fromColumnId,
-          to_column_id: toColumnId,
-          action: "move",
-          description: "Movido entre colunas"
+          os_id: ordemId,
+          usuario_id: user?.id ?? null,
+          coluna_origem_id: fromColunaId,
+          coluna_destino_id: toColunaId,
         });
-      if (historyError) throw historyError;
+      if (histErr) throw histErr;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["kanban_orders"] });
+      queryClient.invalidateQueries({ queryKey: ["kanban_ordens"] });
       toast.success("Ordem movida com sucesso");
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error("Erro ao mover ordem: " + error.message);
-    }
+    },
   });
 
   return {
-    columns: columnsQuery.data || [],
-    orders: ordersQuery.data || [],
-    isLoading: columnsQuery.isLoading || ordersQuery.isLoading,
-    moveCard: (orderId: string, fromColumnId: string, toColumnId: string) => 
-      moveCardMutation.mutate({ orderId, fromColumnId, toColumnId })
+    columns: colunasQuery.data ?? [],
+    orders: ordensQuery.data ?? [],
+    isLoading: colunasQuery.isLoading || ordensQuery.isLoading,
+    moveCard: (ordemId: string, fromColunaId: string, toColunaId: string) =>
+      moveCardMutation.mutate({ ordemId, fromColunaId, toColunaId }),
   };
 }

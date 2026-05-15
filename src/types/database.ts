@@ -1,154 +1,134 @@
-import { supabase } from "@/integrations/supabase/client";
+// Domain types aligned with the Portuguese-named tables in Supabase.
 
-export type Profile = {
+export type Oficina = {
   id: string;
-  workshop_id: string;
-  full_name: string;
+  nome: string;
+  cnpj?: string | null;
+  telefone?: string | null;
+  email?: string | null;
+  endereco?: string | null;
+  logo_url?: string | null;
+  slug?: string | null;
+  created_at?: string | null;
+};
+
+export type Usuario = {
+  id: string;
+  oficina_id: string | null;
+  nome: string;
   email: string;
-  role: 'admin' | 'mechanic';
-  created_at: string;
+  cargo: string | null;
+  ativo: boolean | null;
+  avatar_url?: string | null;
+  created_at?: string | null;
 };
 
-export type Workshop = {
+export type KanbanColuna = {
   id: string;
-  name: string;
-  created_at: string;
+  oficina_id: string | null;
+  nome: string;
+  ordem: number;
+  cor: string | null;
+  created_at?: string | null;
 };
 
-export type KanbanColumn = {
+export type Cliente = {
   id: string;
-  workshop_id: string;
-  name: string;
-  position: number;
-  color: string;
-  is_default: boolean;
+  oficina_id: string | null;
+  nome: string;
+  telefone?: string | null;
+  email?: string | null;
+  cpf_cnpj?: string | null;
+  endereco?: string | null;
+  tags?: string[] | null;
+  aniversario?: string | null;
+  created_at?: string | null;
 };
 
-export type Client = {
+export type Veiculo = {
   id: string;
-  workshop_id: string;
-  name: string;
-  email?: string;
-  phone: string;
-  document?: string;
-  address?: string;
-  created_at: string;
+  oficina_id: string | null;
+  cliente_id: string | null;
+  placa: string;
+  marca?: string | null;
+  modelo?: string | null;
+  ano?: number | null;
+  cor?: string | null;
+  combustivel?: string | null;
+  km_atual?: number | null;
+  observacoes?: string | null;
+  created_at?: string | null;
 };
 
-export type Vehicle = {
+export type OrdemServico = {
   id: string;
-  workshop_id: string;
-  client_id: string;
-  brand: string;
-  model: string;
-  year?: number;
-  plate: string;
-  color?: string;
-  vin?: string;
-  created_at: string;
+  oficina_id: string | null;
+  numero: string;
+  cliente_id: string | null;
+  veiculo_id: string | null;
+  coluna_id: string | null;
+  tecnico_id?: string | null;
+  prioridade: string | null;
+  status_orcamento?: string | null;
+  reclamacao?: string | null;
+  observacoes?: string | null;
+  valor_total: number | null;
+  km_entrada?: number | null;
+  data_agendada?: string | null;
+  tags?: string[] | null;
+  token_publico?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  // joins
+  cliente?: Cliente | null;
+  veiculo?: Veiculo | null;
 };
 
-export type ServiceOrder = {
+export type Agendamento = {
   id: string;
-  workshop_id: string;
-  client_id: string;
-  vehicle_id: string;
-  column_id: string;
-  order_number: string;
-  status: 'open' | 'closed' | 'cancelled';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  description?: string;
-  total_amount: number;
-  technician_id?: string;
-  entry_date: string;
-  exit_date?: string;
-  created_at: string;
-  // Joins
-  client?: Client;
-  vehicle?: Vehicle;
+  oficina_id: string | null;
+  cliente_id: string | null;
+  veiculo_id: string | null;
+  data_hora: string;
+  status: string | null;
+  observacoes?: string | null;
+  servicos?: string[] | null;
+  cliente?: Cliente | null;
+  veiculo?: Veiculo | null;
 };
 
-export type OrderItem = {
+export type Lembrete = {
   id: string;
-  order_id: string;
-  description: string;
-  quantity: number;
-  unit_price: number;
-  type: 'service' | 'product';
+  oficina_id: string | null;
+  cliente_id: string | null;
+  veiculo_id?: string | null;
+  data_agendada: string | null;
+  canal?: string | null;
+  tipo?: string | null;
+  mensagem?: string | null;
+  status: string | null;
+  km_alvo?: number | null;
+  cliente?: Cliente | null;
 };
 
-export type OrderPhoto = {
+export type CatalogoServico = {
   id: string;
-  order_id: string;
-  url: string;
-  created_at: string;
+  oficina_id: string | null;
+  nome: string;
+  categoria?: string | null;
+  preco_base: number | null;
+  tempo_estimado?: number | null;
+  ativo: boolean | null;
 };
 
-export type OrderHistory = {
+export type CatalogoProduto = {
   id: string;
-  order_id: string;
-  user_id: string;
-  from_column_id?: string;
-  to_column_id?: string;
-  action: string;
-  description?: string;
-  created_at: string;
-};
-
-export type Appointment = {
-  id: string;
-  workshop_id: string;
-  client_id: string;
-  vehicle_id: string;
-  service_description: string;
-  scheduled_at: string;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'finished';
-  client?: Client;
-  vehicle?: Vehicle;
-};
-
-export type Reminder = {
-  id: string;
-  workshop_id: string;
-  client_id: string;
-  title: string;
-  description?: string;
-  due_date: string;
-  status: 'active' | 'completed' | 'archived';
-  client?: Client;
-};
-
-export type CatalogItem = {
-  id: string;
-  workshop_id: string;
-  name: string;
-  description?: string;
-  price: number;
-  type: 'service' | 'product';
-  sku?: string;
-};
-
-export type MessageTemplate = {
-  id: string;
-  workshop_id: string;
-  name: string;
-  content: string;
-};
-
-export type KanbanAutomation = {
-  id: string;
-  column_id: string;
-  trigger_type: 'entry' | 'exit' | 'time';
-  trigger_value?: number;
-  template_id?: string;
-};
-
-export type WorkshopSettings = {
-  id: string;
-  workshop_id: string;
-  whaticket_url?: string;
-  whaticket_connected: boolean;
-  address_header?: string;
-  phone_header?: string;
-  logo_url?: string;
+  oficina_id: string | null;
+  nome: string;
+  sku?: string | null;
+  unidade: string | null;
+  preco_unitario: number | null;
+  estoque_atual: number | null;
+  estoque_minimo: number | null;
+  ativo: boolean | null;
 };
