@@ -1,4 +1,6 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 import {
   Wrench, Kanban, FileText, Users, Calendar, Bell,
   MessageSquare, Package, Settings, LogOut, User,
