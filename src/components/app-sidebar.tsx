@@ -1,4 +1,6 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 import {
   Wrench, Kanban, FileText, Users, Calendar, Bell,
   MessageSquare, Package, Settings, LogOut, User,
@@ -29,6 +31,18 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const path = useRouterState({ select: (r) => r.location.pathname });
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success("Sessão encerrada");
+      navigate({ to: "/login" });
+    } catch (e) {
+      toast.error("Erro ao sair");
+    }
+  };
 
   return (
     <Sidebar collapsible="icon" className="border-r">
@@ -87,7 +101,7 @@ export function AppSidebar() {
             <DropdownMenuItem><User className="mr-2 h-4 w-4" /> Perfil</DropdownMenuItem>
             <DropdownMenuItem asChild><Link to="/settings"><Settings className="mr-2 h-4 w-4" /> Configurações</Link></DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild><Link to="/login"><LogOut className="mr-2 h-4 w-4" /> Sair</Link></DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleSignOut}><LogOut className="mr-2 h-4 w-4" /> Sair</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarFooter>
