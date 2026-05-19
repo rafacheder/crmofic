@@ -83,9 +83,9 @@ export function useAdmin() {
     }) => {
       const { error } = await supabase.rpc("admin_atualizar_oficina", {
         p_oficina_id: oficina_id,
-        p_status: status ?? null,
-        p_plano_id: plano_id ?? null,
-        p_trial_ate: trial_ate ?? null,
+        p_status: status ?? undefined,
+        p_plano_id: plano_id ?? undefined,
+        p_trial_ate: trial_ate ?? undefined,
       });
       if (error) throw error;
     },
