@@ -163,7 +163,7 @@ export function useAdmin() {
         const { error } = await supabase
           .from("planos")
           .insert({
-            nome: plano.nome,
+            nome: plano.nome as string,
             preco: plano.preco,
             limite_usuarios: plano.limite_usuarios,
             limite_ordens_mes: plano.limite_ordens_mes,
