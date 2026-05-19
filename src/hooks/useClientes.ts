@@ -22,7 +22,6 @@ export function useClientes() {
         `)
         .eq("oficina_id", oficinaId)
         .order("nome");
-      console.log("[useClientes] clientes:", data, "erro:", error);
       if (error) throw error;
       return (data ?? []) as unknown as (Cliente & { veiculos: { count: number }[]; ordens_servico: { count: number }[] })[];
     },

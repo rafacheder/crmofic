@@ -19,7 +19,6 @@ export function useLembretes() {
         `)
         .eq("oficina_id", oficinaId)
         .order("data_agendada", { ascending: true });
-      console.log("[useLembretes] lembretes:", data, "erro:", error);
       if (error) throw error;
       return (data ?? []) as unknown as Lembrete[];
     },

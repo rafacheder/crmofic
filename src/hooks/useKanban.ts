@@ -18,7 +18,6 @@ export function useKanban() {
         .select("*")
         .eq("oficina_id", oficinaId)
         .order("ordem");
-      console.log("[useKanban] colunas:", data, "erro:", error);
       if (error) throw error;
       return (data ?? []) as unknown as KanbanColuna[];
     },
@@ -37,7 +36,6 @@ export function useKanban() {
           veiculo:veiculos(*)
         `)
         .eq("oficina_id", oficinaId);
-      console.log("[useKanban] ordens:", data, "erro:", error);
       if (error) throw error;
       return (data ?? []) as unknown as OrdemServico[];
     },

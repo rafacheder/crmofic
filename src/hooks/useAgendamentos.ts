@@ -20,7 +20,6 @@ export function useAgendamentos() {
         `)
         .eq("oficina_id", oficinaId)
         .order("data_hora", { ascending: true });
-      console.log("[useAgendamentos] agendamentos:", data, "erro:", error);
       if (error) throw error;
       return (data ?? []) as unknown as Agendamento[];
     },

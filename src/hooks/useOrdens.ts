@@ -22,7 +22,6 @@ export function useOrdens() {
         `)
         .eq("oficina_id", oficinaId)
         .order("created_at", { ascending: false });
-      console.log("[useOrdens] ordens:", data, "erro:", error);
       if (error) throw error;
       return (data ?? []) as unknown as OrdemServico[];
     },

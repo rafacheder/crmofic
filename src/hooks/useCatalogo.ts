@@ -16,7 +16,6 @@ export function useCatalogo() {
         .select("*")
         .eq("oficina_id", oficinaId)
         .order("nome");
-      console.log("[useCatalogo] servicos:", data, "erro:", error);
       if (error) throw error;
       return (data ?? []) as unknown as CatalogoServico[];
     },
@@ -32,7 +31,6 @@ export function useCatalogo() {
         .select("*")
         .eq("oficina_id", oficinaId)
         .order("nome");
-      console.log("[useCatalogo] produtos:", data, "erro:", error);
       if (error) throw error;
       return (data ?? []) as unknown as CatalogoProduto[];
     },

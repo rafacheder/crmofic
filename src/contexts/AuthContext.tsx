@@ -1,3 +1,4 @@
+'use client';
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,8 +32,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq("id", userId)
         .maybeSingle();
 
-      console.log("[AuthContext] usuario:", data, "erro:", error);
-
       if (error) throw error;
 
       if (data) {
@@ -43,8 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUsuario(null);
         setOficina(null);
       }
-    } catch (error) {
-      console.error("[AuthContext] Erro ao buscar usuário:", error);
+    } catch {
       setUsuario(null);
       setOficina(null);
     }
@@ -54,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        // defer to avoid deadlocks
+        // defer to avoid Supabase deadlock on auth state change
         setTimeout(() => fetchUsuarioEOficina(session.user.id), 0);
       } else {
         setUsuario(null);
@@ -79,7 +77,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
 
-  const signUp = async (nomeOficina: string, nomeUsuario: string, email: string, password: string) => {
+  const signUp = async (
+    nomeOficina: string,
+    nomeUsuario: string,
+    email: string,
+    password: string
+  ) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -96,10 +99,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       p_user_id: data.user.id,
     });
 
-    if (rpcError) {
-      console.error("[AuthContext] RPC criar_oficina_e_usuario:", rpcError);
-      throw rpcError;
-    }
+    if (rpcError) throw rpcError;
+
+    // Garante que os dados são carregados APÓS a RPC terminar,
+    // evitando a race condition com o onAuthStateChange
+    await fetchUsuarioEOficina(data.user.id);
 
     toast.success("Conta criada com sucesso!");
   };
