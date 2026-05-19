@@ -143,6 +143,59 @@ export function useAdmin() {
     onError: (e: Error) => toast.error("Erro: " + e.message),
   });
 
+  // Criar/Editar Plano
+  const upsertPlano = useMutation({
+    mutationFn: async (plano: Partial<Plano>) => {
+      if (plano.id) {
+        const { error } = await supabase
+          .from("planos")
+          .update({
+            nome: plano.nome,
+            preco: plano.preco,
+            limite_usuarios: plano.limite_usuarios,
+            limite_ordens_mes: plano.limite_ordens_mes,
+            funcionalidades: plano.funcionalidades,
+            ativo: plano.ativo,
+          })
+          .eq("id", plano.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("planos")
+          .insert({
+            nome: plano.nome,
+            preco: plano.preco,
+            limite_usuarios: plano.limite_usuarios,
+            limite_ordens_mes: plano.limite_ordens_mes,
+            funcionalidades: plano.funcionalidades,
+            ativo: plano.ativo,
+          });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["planos"] });
+      toast.success("Plano salvo com sucesso");
+    },
+    onError: (e: Error) => toast.error("Erro ao salvar plano: " + e.message),
+  });
+
+  // Alternar ativo do plano
+  const togglePlanoAtivo = useMutation({
+    mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
+      const { error } = await supabase
+        .from("planos")
+        .update({ ativo })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["planos"] });
+      toast.success("Status do plano atualizado");
+    },
+    onError: (e: Error) => toast.error("Erro: " + e.message),
+  });
+
   // Histórico de pagamentos de uma oficina
   const useHistoricoPagamentos = (oficina_id: string) =>
     useQuery({
@@ -165,9 +218,16 @@ export function useAdmin() {
     oficinas: oficinasQuery.data ?? [],
     isLoadingOficinas: oficinasQuery.isLoading,
     planos: planosQuery.data ?? [],
+    isLoadingPlanos: planosQuery.isLoading,
     atualizarOficina: atualizarOficina.mutateAsync,
     registrarPagamento: registrarPagamento.mutateAsync,
-    isUpdating: atualizarOficina.isPending || registrarPagamento.isPending,
+    upsertPlano: upsertPlano.mutateAsync,
+    togglePlanoAtivo: togglePlanoAtivo.mutateAsync,
+    isUpdating: 
+      atualizarOficina.isPending || 
+      registrarPagamento.isPending || 
+      upsertPlano.isPending || 
+      togglePlanoAtivo.isPending,
     useHistoricoPagamentos,
   };
 }
