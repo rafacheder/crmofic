@@ -132,7 +132,7 @@ export function useAdmin() {
         p_oficina_id: oficina_id,
         p_status: "ativo",
         p_plano_id: plano_id,
-        p_trial_ate: null,
+        p_trial_ate: undefined,
       });
       if (oficErr) throw oficErr;
     },
