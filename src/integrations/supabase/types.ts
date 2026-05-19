@@ -72,6 +72,60 @@ export type Database = {
           },
         ]
       }
+      assinaturas: {
+        Row: {
+          created_at: string | null
+          data_fim: string | null
+          data_inicio: string
+          forma_pagamento: string | null
+          id: string
+          observacoes: string | null
+          oficina_id: string
+          plano_id: string
+          status: string
+          valor_cobrado: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_fim?: string | null
+          data_inicio?: string
+          forma_pagamento?: string | null
+          id?: string
+          observacoes?: string | null
+          oficina_id: string
+          plano_id: string
+          status?: string
+          valor_cobrado?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          data_fim?: string | null
+          data_inicio?: string
+          forma_pagamento?: string | null
+          id?: string
+          observacoes?: string | null
+          oficina_id?: string
+          plano_id?: string
+          status?: string
+          valor_cobrado?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assinaturas_oficina_id_fkey"
+            columns: ["oficina_id"]
+            isOneToOne: false
+            referencedRelation: "oficinas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assinaturas_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       automacoes_kanban: {
         Row: {
           acao: string | null
@@ -401,8 +455,11 @@ export type Database = {
           id: string
           logo_url: string | null
           nome: string
+          plano_id: string | null
           slug: string | null
+          status: string | null
           telefone: string | null
+          trial_ate: string | null
         }
         Insert: {
           cnpj?: string | null
@@ -412,8 +469,11 @@ export type Database = {
           id?: string
           logo_url?: string | null
           nome: string
+          plano_id?: string | null
           slug?: string | null
+          status?: string | null
           telefone?: string | null
+          trial_ate?: string | null
         }
         Update: {
           cnpj?: string | null
@@ -423,10 +483,21 @@ export type Database = {
           id?: string
           logo_url?: string | null
           nome?: string
+          plano_id?: string | null
           slug?: string | null
+          status?: string | null
           telefone?: string | null
+          trial_ate?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "oficinas_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ordens_servico: {
         Row: {
@@ -656,6 +727,57 @@ export type Database = {
           },
         ]
       }
+      planos: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          funcionalidades: Json | null
+          id: string
+          limite_ordens_mes: number | null
+          limite_usuarios: number | null
+          nome: string
+          preco: number
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          funcionalidades?: Json | null
+          id?: string
+          limite_ordens_mes?: number | null
+          limite_usuarios?: number | null
+          nome: string
+          preco?: number
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          funcionalidades?: Json | null
+          id?: string
+          limite_ordens_mes?: number | null
+          limite_usuarios?: number | null
+          nome?: string
+          preco?: number
+        }
+        Relationships: []
+      }
+      super_admins: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+        }
+        Relationships: []
+      }
       templates_mensagem: {
         Row: {
           canal: string | null
@@ -800,6 +922,32 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_atualizar_oficina: {
+        Args: {
+          p_oficina_id: string
+          p_plano_id?: string
+          p_status?: string
+          p_trial_ate?: string
+        }
+        Returns: undefined
+      }
+      admin_listar_oficinas: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          id: string
+          nome: string
+          plano_nome: string
+          plano_preco: number
+          status: string
+          telefone: string
+          total_ordens: number
+          total_usuarios: number
+          trial_ate: string
+          ultima_atividade: string
+        }[]
+      }
       criar_oficina_e_usuario: {
         Args: {
           nome_oficina: string
@@ -810,6 +958,7 @@ export type Database = {
         Returns: undefined
       }
       get_oficina_id: { Args: never; Returns: string }
+      is_super_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
