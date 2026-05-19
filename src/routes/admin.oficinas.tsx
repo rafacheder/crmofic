@@ -18,7 +18,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export const Route = createFileRoute("/_admin/oficinas")({ component: AdminOficinas });
+export const Route = createFileRoute("/admin/oficinas")({ component: AdminOficinas });
 
 function AdminOficinas() {
   const { oficinas, isLoadingOficinas, planos, atualizarOficina, registrarPagamento, isUpdating } = useAdmin();

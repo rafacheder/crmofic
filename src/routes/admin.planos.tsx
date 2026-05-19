@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
 
-export const Route = createFileRoute("/_admin/planos")({ component: AdminPlanos });
+export const Route = createFileRoute("/admin/planos")({ component: AdminPlanos });
 
 const featLabels: Record<string, string> = {
   kanban: "Kanban",

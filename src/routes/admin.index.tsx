@@ -5,7 +5,7 @@ import { Building2, Users, TrendingUp, AlertCircle } from "lucide-react";
 import { StatusBadge } from "@/components/admin-status-badge";
 export { StatusBadge };
 
-export const Route = createFileRoute("/_admin/admin")({ component: AdminDashboard });
+export const Route = createFileRoute("/admin/")({ component: AdminDashboard });
 
 function AdminDashboard() {
   const { oficinas, isLoadingOficinas } = useAdmin();
