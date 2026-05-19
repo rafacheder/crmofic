@@ -10,7 +10,7 @@ import {
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_admin")({ component: AdminLayout });
+export const Route = createFileRoute("/admin")({ component: AdminLayout });
 
 const navItems = [
   { to: "/admin",          label: "Dashboard",  icon: LayoutDashboard, exact: true },

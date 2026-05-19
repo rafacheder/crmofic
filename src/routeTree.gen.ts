@@ -11,12 +11,15 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppRouteImport } from './routes/_app'
-import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as PortalTokenRouteImport } from './routes/portal.$token'
 import { Route as BudgetTokenRouteImport } from './routes/budget.$token'
 import { Route as BookSlugRouteImport } from './routes/book.$slug'
+import { Route as AdminPlanosRouteImport } from './routes/admin.planos'
+import { Route as AdminOficinasRouteImport } from './routes/admin.oficinas'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppRemindersRouteImport } from './routes/_app.reminders'
 import { Route as AppOrdersRouteImport } from './routes/_app.orders'
@@ -25,9 +28,6 @@ import { Route as AppInboxRouteImport } from './routes/_app.inbox'
 import { Route as AppClientsRouteImport } from './routes/_app.clients'
 import { Route as AppCatalogRouteImport } from './routes/_app.catalog'
 import { Route as AppAppointmentsRouteImport } from './routes/_app.appointments'
-import { Route as AdminPlanosRouteImport } from './routes/_admin.planos'
-import { Route as AdminOficinasRouteImport } from './routes/_admin.oficinas'
-import { Route as AdminAdminRouteImport } from './routes/_admin.admin'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -39,18 +39,24 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppRoute = AppRouteImport.update({
-  id: '/_app',
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/_admin',
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const PortalTokenRoute = PortalTokenRouteImport.update({
   id: '/portal/$token',
@@ -66,6 +72,16 @@ const BookSlugRoute = BookSlugRouteImport.update({
   id: '/book/$slug',
   path: '/book/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPlanosRoute = AdminPlanosRouteImport.update({
+  id: '/planos',
+  path: '/planos',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminOficinasRoute = AdminOficinasRouteImport.update({
+  id: '/oficinas',
+  path: '/oficinas',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
@@ -107,29 +123,12 @@ const AppAppointmentsRoute = AppAppointmentsRouteImport.update({
   path: '/appointments',
   getParentRoute: () => AppRoute,
 } as any)
-const AdminPlanosRoute = AdminPlanosRouteImport.update({
-  id: '/planos',
-  path: '/planos',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminOficinasRoute = AdminOficinasRouteImport.update({
-  id: '/oficinas',
-  path: '/oficinas',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAdminRoute = AdminAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => AdminRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/admin': typeof AdminAdminRoute
-  '/oficinas': typeof AdminOficinasRoute
-  '/planos': typeof AdminPlanosRoute
   '/appointments': typeof AppAppointmentsRoute
   '/catalog': typeof AppCatalogRoute
   '/clients': typeof AppClientsRoute
@@ -138,17 +137,17 @@ export interface FileRoutesByFullPath {
   '/orders': typeof AppOrdersRoute
   '/reminders': typeof AppRemindersRoute
   '/settings': typeof AppSettingsRoute
+  '/admin/oficinas': typeof AdminOficinasRoute
+  '/admin/planos': typeof AdminPlanosRoute
   '/book/$slug': typeof BookSlugRoute
   '/budget/$token': typeof BudgetTokenRoute
   '/portal/$token': typeof PortalTokenRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/admin': typeof AdminAdminRoute
-  '/oficinas': typeof AdminOficinasRoute
-  '/planos': typeof AdminPlanosRoute
   '/appointments': typeof AppAppointmentsRoute
   '/catalog': typeof AppCatalogRoute
   '/clients': typeof AppClientsRoute
@@ -157,20 +156,20 @@ export interface FileRoutesByTo {
   '/orders': typeof AppOrdersRoute
   '/reminders': typeof AppRemindersRoute
   '/settings': typeof AppSettingsRoute
+  '/admin/oficinas': typeof AdminOficinasRoute
+  '/admin/planos': typeof AdminPlanosRoute
   '/book/$slug': typeof BookSlugRoute
   '/budget/$token': typeof BudgetTokenRoute
   '/portal/$token': typeof PortalTokenRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/_admin': typeof AdminRouteWithChildren
   '/_app': typeof AppRouteWithChildren
+  '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/_admin/admin': typeof AdminAdminRoute
-  '/_admin/oficinas': typeof AdminOficinasRoute
-  '/_admin/planos': typeof AdminPlanosRoute
   '/_app/appointments': typeof AppAppointmentsRoute
   '/_app/catalog': typeof AppCatalogRoute
   '/_app/clients': typeof AppClientsRoute
@@ -179,19 +178,20 @@ export interface FileRoutesById {
   '/_app/orders': typeof AppOrdersRoute
   '/_app/reminders': typeof AppRemindersRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/admin/oficinas': typeof AdminOficinasRoute
+  '/admin/planos': typeof AdminPlanosRoute
   '/book/$slug': typeof BookSlugRoute
   '/budget/$token': typeof BudgetTokenRoute
   '/portal/$token': typeof PortalTokenRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/login'
     | '/register'
-    | '/admin'
-    | '/oficinas'
-    | '/planos'
     | '/appointments'
     | '/catalog'
     | '/clients'
@@ -200,17 +200,17 @@ export interface FileRouteTypes {
     | '/orders'
     | '/reminders'
     | '/settings'
+    | '/admin/oficinas'
+    | '/admin/planos'
     | '/book/$slug'
     | '/budget/$token'
     | '/portal/$token'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/register'
-    | '/admin'
-    | '/oficinas'
-    | '/planos'
     | '/appointments'
     | '/catalog'
     | '/clients'
@@ -219,19 +219,19 @@ export interface FileRouteTypes {
     | '/orders'
     | '/reminders'
     | '/settings'
+    | '/admin/oficinas'
+    | '/admin/planos'
     | '/book/$slug'
     | '/budget/$token'
     | '/portal/$token'
+    | '/admin'
   id:
     | '__root__'
     | '/'
-    | '/_admin'
     | '/_app'
+    | '/admin'
     | '/login'
     | '/register'
-    | '/_admin/admin'
-    | '/_admin/oficinas'
-    | '/_admin/planos'
     | '/_app/appointments'
     | '/_app/catalog'
     | '/_app/clients'
@@ -240,15 +240,18 @@ export interface FileRouteTypes {
     | '/_app/orders'
     | '/_app/reminders'
     | '/_app/settings'
+    | '/admin/oficinas'
+    | '/admin/planos'
     | '/book/$slug'
     | '/budget/$token'
     | '/portal/$token'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRouteWithChildren
   AppRoute: typeof AppRouteWithChildren
+  AdminRoute: typeof AdminRouteWithChildren
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   BookSlugRoute: typeof BookSlugRoute
@@ -272,18 +275,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app': {
       id: '/_app'
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_admin': {
-      id: '/_admin'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -292,6 +295,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/portal/$token': {
       id: '/portal/$token'
@@ -313,6 +323,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/book/$slug'
       preLoaderRoute: typeof BookSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/planos': {
+      id: '/admin/planos'
+      path: '/planos'
+      fullPath: '/admin/planos'
+      preLoaderRoute: typeof AdminPlanosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/oficinas': {
+      id: '/admin/oficinas'
+      path: '/oficinas'
+      fullPath: '/admin/oficinas'
+      preLoaderRoute: typeof AdminOficinasRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/_app/settings': {
       id: '/_app/settings'
@@ -370,43 +394,8 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppointmentsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_admin/planos': {
-      id: '/_admin/planos'
-      path: '/planos'
-      fullPath: '/planos'
-      preLoaderRoute: typeof AdminPlanosRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/oficinas': {
-      id: '/_admin/oficinas'
-      path: '/oficinas'
-      fullPath: '/oficinas'
-      preLoaderRoute: typeof AdminOficinasRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/admin': {
-      id: '/_admin/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminAdminRouteImport
-      parentRoute: typeof AdminRoute
-    }
   }
 }
-
-interface AdminRouteChildren {
-  AdminAdminRoute: typeof AdminAdminRoute
-  AdminOficinasRoute: typeof AdminOficinasRoute
-  AdminPlanosRoute: typeof AdminPlanosRoute
-}
-
-const AdminRouteChildren: AdminRouteChildren = {
-  AdminAdminRoute: AdminAdminRoute,
-  AdminOficinasRoute: AdminOficinasRoute,
-  AdminPlanosRoute: AdminPlanosRoute,
-}
-
-const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface AppRouteChildren {
   AppAppointmentsRoute: typeof AppAppointmentsRoute
@@ -432,10 +421,24 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface AdminRouteChildren {
+  AdminOficinasRoute: typeof AdminOficinasRoute
+  AdminPlanosRoute: typeof AdminPlanosRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminOficinasRoute: AdminOficinasRoute,
+  AdminPlanosRoute: AdminPlanosRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRouteWithChildren,
   AppRoute: AppRouteWithChildren,
+  AdminRoute: AdminRouteWithChildren,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   BookSlugRoute: BookSlugRoute,
