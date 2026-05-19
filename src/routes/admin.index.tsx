@@ -3,7 +3,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Users, TrendingUp, AlertCircle } from "lucide-react";
 import { StatusBadge } from "@/components/admin-status-badge";
-export { StatusBadge };
+// Removida exportação desnecessária de StatusBadge
 
 export const Route = createFileRoute("/admin/")({ component: AdminDashboard });
 
