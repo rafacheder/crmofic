@@ -14,21 +14,26 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useStore, store } from "@/lib/store";
+import { useOrder } from "@/hooks/useOrder";
+import { useKanban } from "@/hooks/useKanban";
 import {
-  KANBAN_COLUMNS, clientById, vehicleById, priorityMeta, budgetMeta,
+  priorityMeta, budgetMeta,
   formatBRL, initials, timeSince,
 } from "@/lib/mock-data";
 import { Send, ImagePlus, Plus } from "lucide-react";
 
 export function OrderSheet({ orderId, onClose }: { orderId: string | null; onClose: () => void }) {
-  const order = useStore((s) => s.orders.find((o) => o.id === orderId));
+  const { order, isLoading, updateOrder, moveOrder } = useOrder(orderId);
+  const { columns } = useKanban();
   const [tab, setTab] = useState("detalhes");
 
+  if (!orderId) return null;
+  if (isLoading) return null;
   if (!order) return null;
-  const cli = clientById(order.clientId);
-  const veh = vehicleById(order.vehicleId);
-  const subTotal = order.items.reduce((acc, it) => acc + it.qty * it.unitPrice - it.discount, 0);
+
+  const prio = (order.prioridade ?? "NORMAL") as keyof typeof priorityMeta;
+  const budgetStatus = (order.status_orcamento ?? "PENDENTE") as keyof typeof budgetMeta;
+  const subTotal = (order.itens ?? []).reduce((acc: number, it: any) => acc + (it.quantidade * it.preco_unitario) - it.desconto, 0);
 
   return (
     <Sheet open={!!orderId} onOpenChange={(o) => !o && onClose()}>
@@ -37,13 +42,13 @@ export function OrderSheet({ orderId, onClose }: { orderId: string | null; onClo
           <div className="flex items-start justify-between gap-2">
             <div>
               <SheetTitle className="flex items-center gap-2">
-                <span className="font-mono text-sm text-muted-foreground">{order.number}</span>
-                <Badge className={priorityMeta[order.priority].className} variant="secondary">
-                  {priorityMeta[order.priority].label}
+                <span className="font-mono text-sm text-muted-foreground">{order.numero}</span>
+                <Badge className={priorityMeta[prio]?.className} variant="secondary">
+                  {priorityMeta[prio]?.label ?? order.prioridade}
                 </Badge>
               </SheetTitle>
               <SheetDescription className="mt-1">
-                {cli?.name} • {veh?.brand} {veh?.model} ({veh?.plate})
+                {order.cliente?.nome} • {order.veiculo?.marca} {order.veiculo?.modelo} ({order.veiculo?.placa})
               </SheetDescription>
             </div>
           </div>
@@ -59,39 +64,38 @@ export function OrderSheet({ orderId, onClose }: { orderId: string | null; onClo
 
           <TabsContent value="detalhes" className="space-y-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <Field label="Cliente" value={cli?.name} />
-              <Field label="Telefone" value={cli?.phone} />
-              <Field label="Veículo" value={`${veh?.brand} ${veh?.model} ${veh?.year}`} />
-              <Field label="Placa" value={veh?.plate} />
-              <Field label="KM Entrada" value={order.kmIn.toLocaleString("pt-BR")} />
-              <Field label="Técnico" value={order.technician} />
-              <Field label="Coluna atual" value={KANBAN_COLUMNS.find((c) => c.id === order.column)?.name} />
-              <Field label="Tempo na coluna" value={timeSince(order.enteredColumnAt)} />
+              <Field label="Cliente" value={order.cliente?.nome} />
+              <Field label="Telefone" value={order.cliente?.telefone} />
+              <Field label="Veículo" value={`${order.veiculo?.marca} ${order.veiculo?.modelo} ${order.veiculo?.ano ?? ""}`} />
+              <Field label="Placa" value={order.veiculo?.placa} />
+              <Field label="KM Entrada" value={order.km_entrada?.toLocaleString("pt-BR")} />
+              <Field label="Coluna atual" value={columns.find((c) => c.id === order.coluna_id)?.nome} />
+              <Field label="Tempo na coluna" value={order.updated_at ? timeSince(order.updated_at) : "—"} />
             </div>
             <Separator />
             <div>
               <div className="mb-1 text-xs text-muted-foreground">Reclamação do cliente</div>
-              <p className="text-sm">{order.complaint}</p>
+              <p className="text-sm">{order.reclamacao || "—"}</p>
             </div>
             <Separator />
             <div className="flex flex-wrap gap-2">
-              <Button onClick={() => { store.updateOrder(order.id, { budgetStatus: "ENVIADO" }); toast.success("Orçamento enviado"); }}>
+              <Button onClick={() => { updateOrder({ status_orcamento: "ENVIADO" }); toast.success("Orçamento enviado"); }}>
                 <Send className="mr-1 h-4 w-4" /> Enviar Orçamento
               </Button>
-              <Select onValueChange={(v) => { store.moveOrder(order.id, v as never); toast.success("OS movida"); }}>
+              <Select onValueChange={(v) => moveOrder({ fromId: order.coluna_id, toId: v })}>
                 <SelectTrigger className="w-48"><SelectValue placeholder="Mover coluna..." /></SelectTrigger>
                 <SelectContent>
-                  {KANBAN_COLUMNS.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  {columns.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div>
               <div className="mb-2 text-xs text-muted-foreground">Total</div>
-              <div className="text-2xl font-bold">{formatBRL(order.total)}</div>
-              <Badge className={`mt-1 ${budgetMeta[order.budgetStatus].className}`} variant="secondary">
-                Orçamento {order.budgetStatus}
+              <div className="text-2xl font-bold">{formatBRL(order.valor_total ?? 0)}</div>
+              <Badge className={`mt-1 ${budgetMeta[budgetStatus]?.className}`} variant="secondary">
+                Orçamento {budgetStatus}
               </Badge>
             </div>
           </TabsContent>
@@ -111,16 +115,16 @@ export function OrderSheet({ orderId, onClose }: { orderId: string | null; onClo
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {order.items.map((it) => (
+                {(order.itens ?? []).map((it: any) => (
                   <TableRow key={it.id}>
                     <TableCell>
-                      <div className="font-medium">{it.name}</div>
-                      <div className="text-xs text-muted-foreground capitalize">{it.type === "service" ? "Serviço" : "Peça"}</div>
+                      <div className="font-medium">{it.nome}</div>
+                      <div className="text-xs text-muted-foreground capitalize">{it.tipo === "service" ? "Serviço" : "Peça"}</div>
                     </TableCell>
-                    <TableCell className="text-right">{it.qty}</TableCell>
-                    <TableCell className="text-right">{formatBRL(it.unitPrice)}</TableCell>
-                    <TableCell className="text-right">{formatBRL(it.discount)}</TableCell>
-                    <TableCell className="text-right font-medium">{formatBRL(it.qty * it.unitPrice - it.discount)}</TableCell>
+                    <TableCell className="text-right">{it.quantidade}</TableCell>
+                    <TableCell className="text-right">{formatBRL(it.preco_unitario)}</TableCell>
+                    <TableCell className="text-right">{formatBRL(it.desconto)}</TableCell>
+                    <TableCell className="text-right font-medium">{formatBRL(it.quantidade * it.preco_unitario - it.desconto)}</TableCell>
                   </TableRow>
                 ))}
                 <TableRow>
@@ -132,26 +136,35 @@ export function OrderSheet({ orderId, onClose }: { orderId: string | null; onClo
           </TabsContent>
 
           <TabsContent value="fotos">
-            <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed py-12 text-center">
+            <div className="grid grid-cols-2 gap-2">
+              {(order.fotos ?? []).map((f: any) => (
+                <div key={f.id} className="aspect-square rounded-md overflow-hidden border">
+                   <img src={f.url} alt="Foto da OS" className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed py-12 text-center mt-2">
               <ImagePlus className="h-10 w-10 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Nenhuma foto. Faça upload do check-in.</p>
+              <p className="text-sm text-muted-foreground">Adicionar novas fotos.</p>
               <Button variant="outline" size="sm">Adicionar foto</Button>
             </div>
           </TabsContent>
 
           <TabsContent value="historico">
             <ol className="relative space-y-4 border-l pl-4">
-              {order.history.map((h, i) => (
-                <li key={i} className="relative">
+              {(order.historico ?? []).map((h: any, i: number) => (
+                <li key={h.id} className="relative">
                   <span className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-primary" />
                   <div className="text-sm">
-                    {h.from
-                      ? `Movida de ${KANBAN_COLUMNS.find((c) => c.id === h.from)?.name} para ${KANBAN_COLUMNS.find((c) => c.id === h.to)?.name}`
-                      : `Criada em ${KANBAN_COLUMNS.find((c) => c.id === h.to)?.name}`}
+                    {h.coluna_origem_id
+                      ? `Movida de ${columns.find((c) => c.id === h.coluna_origem_id)?.nome} para ${columns.find((c) => c.id === h.coluna_destino_id)?.nome}`
+                      : `Criada em ${columns.find((c) => c.id === h.coluna_destino_id)?.nome}`}
                   </div>
                   <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-                    <Avatar className="h-4 w-4"><AvatarFallback className="text-[8px]">{initials(h.by)}</AvatarFallback></Avatar>
-                    {h.by} • {new Date(h.at).toLocaleString("pt-BR")}
+                    <Avatar className="h-4 w-4">
+                      <AvatarFallback className="text-[8px]">{h.usuario?.nome ? initials(h.usuario.nome) : "??"}</AvatarFallback>
+                    </Avatar>
+                    {h.usuario?.nome ?? "Sistema"} • {new Date(h.created_at).toLocaleString("pt-BR")}
                   </div>
                 </li>
               ))}

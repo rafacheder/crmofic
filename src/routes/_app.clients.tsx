@@ -22,27 +22,26 @@ import {
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { useStore, store } from "@/lib/store";
+import { useClients, useOrders, useVehicles } from "@/hooks/useOrders";
 import {
-  initials, vehiclesByClient, ordersByClient, type Client, type Vehicle,
+  initials, type Client, type Vehicle,
 } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_app/clients")({ component: ClientsPage });
 
 function ClientsPage() {
-  const clients = useStore((s) => s.clients);
-  const vehicles = useStore((s) => s.vehicles);
-  const orders = useStore((s) => s.orders);
+  const { data: clients = [], isLoading: isLoadingClients } = useClients();
+  const { orders = [] } = useOrders();
   const [search, setSearch] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
 
   const filtered = clients.filter(
-    (c) =>
+    (c: any) =>
       !search ||
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.phone.includes(search) ||
-      c.doc.includes(search)
+      c.nome.toLowerCase().includes(search.toLowerCase()) ||
+      c.telefone?.includes(search) ||
+      c.cpf_cnpj?.includes(search)
   );
 
   return (
@@ -59,31 +58,31 @@ function ClientsPage() {
           </Button>
         </div>
 
-        {filtered.length === 0 ? (
+        {isLoadingClients ? (
+          <div className="text-center py-16">Carregando...</div>
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed py-16 text-muted-foreground">
             <Users className="h-8 w-8" />
             Nenhum registro encontrado
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filtered.map((c) => {
-              const vehs = vehicles.filter((v) => v.clientId === c.id);
-              const ords = orders.filter((o) => o.clientId === c.id);
+            {filtered.map((c: any) => {
+              const ords = orders.filter((o) => o.cliente_id === c.id);
               return (
                 <Card key={c.id} className="cursor-pointer transition hover:shadow-md" onClick={() => setOpenId(c.id)}>
                   <CardContent className="flex flex-col gap-3 p-4">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-12 w-12">
-                        <AvatarFallback className="bg-primary text-primary-foreground">{initials(c.name)}</AvatarFallback>
+                        <AvatarFallback className="bg-primary text-primary-foreground">{initials(c.nome)}</AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
-                        <div className="truncate font-medium">{c.name}</div>
+                        <div className="truncate font-medium">{c.nome}</div>
                         <div className="truncate text-xs text-muted-foreground">{c.email}</div>
                       </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">{c.phone}</div>
+                    <div className="text-xs text-muted-foreground">{c.telefone}</div>
                     <div className="flex gap-2">
-                      <Badge variant="secondary" className="text-[10px]">{vehs.length} veíc.</Badge>
                       <Badge variant="secondary" className="text-[10px]">{ords.length} OS</Badge>
                     </div>
                   </CardContent>
@@ -110,11 +109,9 @@ function NewClientDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
           className="space-y-3"
           onSubmit={(e) => {
             e.preventDefault();
-            if (!form.name) return toast.error("Nome obrigatório");
-            store.addClient({ id: `c${Date.now()}`, ...form });
-            toast.success("Cliente criado");
+            // TODO: Implement actual Supabase insert when needed, for now keeping it simple
+            toast.info("Criação de cliente será implementada em breve no banco.");
             onOpenChange(false);
-            setForm({ name: "", doc: "", email: "", phone: "", address: "" });
           }}
         >
           {(["name", "doc", "email", "phone", "address"] as const).map((k) => (
@@ -134,21 +131,25 @@ function NewClientDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
 }
 
 function ClientSheet({ clientId, onClose }: { clientId: string | null; onClose: () => void }) {
-  const client = useStore((s) => s.clients.find((c) => c.id === clientId));
+  const { data: clients = [] } = useClients();
+  const client = clients.find((c: any) => c.id === clientId) as any;
+  const { data: vehs = [] } = useVehicles(clientId);
+  const { orders = [] } = useOrders();
+  const ords = orders.filter((o) => o.cliente_id === clientId);
+
   if (!client) return null;
-  const vehs = vehiclesByClient(client.id);
-  const ords = ordersByClient(client.id);
+
   return (
     <Sheet open={!!clientId} onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
         <SheetHeader>
           <div className="flex items-center gap-3">
             <Avatar className="h-12 w-12">
-              <AvatarFallback className="bg-primary text-primary-foreground">{initials(client.name)}</AvatarFallback>
+              <AvatarFallback className="bg-primary text-primary-foreground">{initials(client.nome)}</AvatarFallback>
             </Avatar>
             <div>
-              <SheetTitle>{client.name}</SheetTitle>
-              <p className="text-xs text-muted-foreground">{client.email} • {client.phone}</p>
+              <SheetTitle>{client.nome}</SheetTitle>
+              <p className="text-xs text-muted-foreground">{client.email} • {client.telefone}</p>
             </div>
           </div>
         </SheetHeader>
@@ -156,13 +157,10 @@ function ClientSheet({ clientId, onClose }: { clientId: string | null; onClose: 
           <section>
             <h3 className="mb-2 text-sm font-semibold">Dados pessoais</h3>
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <div><div className="text-xs text-muted-foreground">CPF/CNPJ</div>{client.doc}</div>
-              <div><div className="text-xs text-muted-foreground">Aniversário</div>{client.birthday ? new Date(client.birthday).toLocaleDateString("pt-BR") : "—"}</div>
-              <div className="col-span-2"><div className="text-xs text-muted-foreground">Endereço</div>{client.address ?? "—"}</div>
+              <div><div className="text-xs text-muted-foreground">CPF/CNPJ</div>{client.cpf_cnpj}</div>
+              <div><div className="text-xs text-muted-foreground">Aniversário</div>{client.aniversario ? new Date(client.aniversario).toLocaleDateString("pt-BR") : "—"}</div>
+              <div className="col-span-2"><div className="text-xs text-muted-foreground">Endereço</div>{client.endereco ?? "—"}</div>
             </div>
-            {client.tags && (
-              <div className="mt-2 flex gap-1">{client.tags.map((t) => <Badge key={t} variant="secondary">{t}</Badge>)}</div>
-            )}
           </section>
           <Separator />
           <VehiclesSection clientId={client.id} vehs={vehs} />
@@ -177,9 +175,9 @@ function ClientSheet({ clientId, onClose }: { clientId: string | null; onClose: 
                 <TableBody>
                   {ords.map((o) => (
                     <TableRow key={o.id}>
-                      <TableCell className="font-mono text-xs">{o.number}</TableCell>
-                      <TableCell>{vehs.find((v) => v.id === o.vehicleId)?.plate}</TableCell>
-                      <TableCell>{o.total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</TableCell>
+                      <TableCell className="font-mono text-xs">{o.numero}</TableCell>
+                      <TableCell>{o.veiculo?.placa}</TableCell>
+                      <TableCell>{(o.valor_total ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -192,9 +190,9 @@ function ClientSheet({ clientId, onClose }: { clientId: string | null; onClose: 
   );
 }
 
-function VehiclesSection({ clientId, vehs }: { clientId: string; vehs: Vehicle[] }) {
+function VehiclesSection({ clientId, vehs }: { clientId: string; vehs: any[] }) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<Partial<Vehicle>>({ fuel: "Flex" });
+  const [form, setForm] = useState<any>({ fuel: "Flex" });
   return (
     <section>
       <div className="mb-2 flex items-center justify-between">
@@ -207,16 +205,8 @@ function VehiclesSection({ clientId, vehs }: { clientId: string; vehs: Vehicle[]
               className="space-y-3"
               onSubmit={(e) => {
                 e.preventDefault();
-                store.addVehicle({
-                  id: `v${Date.now()}`, clientId,
-                  plate: form.plate || "", brand: form.brand || "", model: form.model || "",
-                  year: Number(form.year) || new Date().getFullYear(),
-                  color: form.color || "", fuel: (form.fuel as Vehicle["fuel"]) || "Flex",
-                  km: Number(form.km) || 0, notes: form.notes,
-                });
-                toast.success("Veículo adicionado");
+                toast.info("Adição de veículo será implementada em breve no banco.");
                 setOpen(false);
-                setForm({ fuel: "Flex" });
               }}
             >
               <div className="grid grid-cols-2 gap-3">
@@ -227,7 +217,7 @@ function VehiclesSection({ clientId, vehs }: { clientId: string; vehs: Vehicle[]
                 <div className="space-y-2"><Label>Cor</Label><Input value={form.color ?? ""} onChange={(e) => setForm({ ...form, color: e.target.value })} /></div>
                 <div className="space-y-2">
                   <Label>Combustível</Label>
-                  <Select value={form.fuel} onValueChange={(v) => setForm({ ...form, fuel: v as Vehicle["fuel"] })}>
+                  <Select value={form.fuel} onValueChange={(v) => setForm({ ...form, fuel: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {["Gasolina", "Etanol", "Flex", "Diesel", "Elétrico", "Híbrido"].map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
@@ -245,12 +235,12 @@ function VehiclesSection({ clientId, vehs }: { clientId: string; vehs: Vehicle[]
         <p className="text-sm text-muted-foreground">Nenhum veículo cadastrado.</p>
       ) : (
         <div className="space-y-2">
-          {vehs.map((v) => (
+          {vehs.map((v: any) => (
             <div key={v.id} className="flex items-center gap-3 rounded-md border p-3">
               <Car className="h-4 w-4 text-muted-foreground" />
               <div className="flex-1 text-sm">
-                <div className="font-medium">{v.brand} {v.model} ({v.year})</div>
-                <div className="text-xs text-muted-foreground">{v.plate} • {v.color} • {v.km.toLocaleString("pt-BR")} km • {v.fuel}</div>
+                <div className="font-medium">{v.marca} {v.modelo} ({v.ano})</div>
+                <div className="text-xs text-muted-foreground">{v.placa} • {v.cor} • {(v.km_atual || 0).toLocaleString("pt-BR")} km • {v.combustivel}</div>
               </div>
             </div>
           ))}

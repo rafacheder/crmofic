@@ -10,14 +10,16 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useStore, store } from "@/lib/store";
-import { vehiclesByClient, type Priority, type Order } from "@/lib/mock-data";
+import { useOrders, useClients, useVehicles } from "@/hooks/useOrders";
+import { type Priority } from "@/lib/mock-data";
 
 export function NewOrderDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
-  const clients = useStore((s) => s.clients);
-  const ordersCount = useStore((s) => s.orders.length);
+  const { createOrder, isCreating } = useOrders();
+  const { data: clients = [] } = useClients();
   const [clientId, setClientId] = useState("");
   const [vehicleId, setVehicleId] = useState("");
+  const { data: vehicles = [] } = useVehicles(clientId);
+  
   const [priority, setPriority] = useState<Priority>("NORMAL");
   const [tech, setTech] = useState("Carlos M.");
   const [complaint, setComplaint] = useState("");
@@ -25,31 +27,34 @@ export function NewOrderDialog({ open, onOpenChange }: { open: boolean; onOpenCh
   const [scheduledAt, setScheduledAt] = useState("");
   const [notes, setNotes] = useState("");
 
-  const vehicles = clientId ? vehiclesByClient(clientId) : [];
-
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clientId || !vehicleId || !complaint) {
       toast.error("Preencha cliente, veículo e reclamação");
       return;
     }
-    const num = `OS-${new Date().getFullYear()}-${String(ordersCount + 1).padStart(4, "0")}`;
-    const newOrder: Order = {
-      id: `o${Date.now()}`,
-      number: num, clientId, vehicleId,
-      column: "recepcao", priority, budgetStatus: "PENDENTE",
-      technician: tech, total: 0, tags: [], complaint,
-      kmIn: Number(kmIn) || 0, scheduledAt: scheduledAt || undefined, notes,
-      enteredColumnAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      items: [],
-      history: [{ from: null, to: "recepcao", by: "Você", at: new Date().toISOString() }],
-      photos: [],
-    };
-    store.addOrder(newOrder);
-    toast.success(`${num} criada`);
-    onOpenChange(false);
-    setClientId(""); setVehicleId(""); setComplaint(""); setKmIn(""); setScheduledAt(""); setNotes("");
+
+    try {
+      await createOrder({
+        cliente_id: clientId,
+        veiculo_id: vehicleId,
+        prioridade: priority,
+        reclamacao: complaint,
+        km_entrada: kmIn ? Number(kmIn) : null,
+        data_agendada: scheduledAt ? new Date(scheduledAt).toISOString() : null,
+        observacoes: notes,
+      });
+
+      onOpenChange(false);
+      setClientId(""); 
+      setVehicleId(""); 
+      setComplaint(""); 
+      setKmIn(""); 
+      setScheduledAt(""); 
+      setNotes("");
+    } catch (err) {
+      // toast is handled by hook
+    }
   };
 
   return (
@@ -61,14 +66,26 @@ export function NewOrderDialog({ open, onOpenChange }: { open: boolean; onOpenCh
             <Label>Cliente</Label>
             <Select value={clientId} onValueChange={(v) => { setClientId(v); setVehicleId(""); }}>
               <SelectTrigger><SelectValue placeholder="Selecione o cliente" /></SelectTrigger>
-              <SelectContent>{clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+              <SelectContent>
+                {clients.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
             <Label>Veículo</Label>
             <Select value={vehicleId} onValueChange={setVehicleId} disabled={!clientId}>
               <SelectTrigger><SelectValue placeholder="Selecione o veículo" /></SelectTrigger>
-              <SelectContent>{vehicles.map((v) => <SelectItem key={v.id} value={v.id}>{v.plate} — {v.brand} {v.model}</SelectItem>)}</SelectContent>
+              <SelectContent>
+                {vehicles.map((v) => (
+                  <SelectItem key={v.id} value={v.id}>
+                    {v.placa} — {v.marca} {v.modelo}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
@@ -114,7 +131,9 @@ export function NewOrderDialog({ open, onOpenChange }: { open: boolean; onOpenCh
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit">Criar OS</Button>
+            <Button type="submit" disabled={isCreating}>
+              {isCreating ? "Criando..." : "Criar OS"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

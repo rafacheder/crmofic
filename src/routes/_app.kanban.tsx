@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Search, RefreshCw, GripVertical } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/_app/kanban")({ component: KanbanPage });
 
 function KanbanPage() {
   const { columns, orders, isLoading, moveCard } = useKanban();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [priority, setPriority] = useState<string>("ALL");
   const [openId, setOpenId] = useState<string | null>(null);
@@ -90,7 +92,7 @@ function KanbanPage() {
               <SelectItem value="URGENT">Urgente</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon" onClick={() => toast.success("Atualizado")}>
+          <Button variant="outline" size="icon" onClick={() => { queryClient.invalidateQueries({ queryKey: ["kanban_ordens"] }); toast.success("Atualizado"); }}>
             <RefreshCw className="h-4 w-4" />
           </Button>
           <Button className="ml-auto" onClick={() => setNewOpen(true)}>
