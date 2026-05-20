@@ -35,9 +35,10 @@ export function useOrder(orderId: string | null) {
   const updateOrderMutation = useMutation({
     mutationFn: async (patch: Partial<OrdemServico>) => {
       if (!orderId) return;
+      const { cliente, veiculo, itens, historico, fotos, ...updatePatch } = patch as any;
       const { error } = await supabase
         .from("ordens_servico")
-        .update(patch)
+        .update(updatePatch)
         .eq("id", orderId);
       if (error) throw error;
     },

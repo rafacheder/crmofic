@@ -58,10 +58,12 @@ export function useOrders() {
       }
 
       // 3. Insert the order
+      const { cliente, veiculo, ...insertPayload } = payload;
+      
       const { data, error } = await supabase
         .from("ordens_servico")
         .insert({
-          ...payload,
+          ...(insertPayload as any),
           numero,
           oficina_id: oficinaId,
           coluna_id: colId,
