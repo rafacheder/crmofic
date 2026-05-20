@@ -46,7 +46,98 @@ function SettingsPage() {
   );
 }
 
-// ... keep existing code (GeneralTab, KanbanTab)
+function GeneralTab() {
+  return (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <Card>
+        <CardHeader><CardTitle>Dados da Oficina</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <div className="space-y-2"><Label>Nome</Label><Input defaultValue="Auto Center Silva" /></div>
+          <div className="space-y-2"><Label>CNPJ</Label><Input defaultValue="12.345.678/0001-90" /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2"><Label>Telefone</Label><Input defaultValue="(11) 4444-5555" /></div>
+            <div className="space-y-2"><Label>Email</Label><Input defaultValue="contato@oficina.com" /></div>
+          </div>
+          <div className="space-y-2"><Label>Endereço</Label><Input defaultValue="Av. Paulista, 1000" /></div>
+          <div className="space-y-2"><Label>Logo</Label><Input type="file" /></div>
+          <Button onClick={() => toast.success("Salvo")}>Salvar</Button>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle>Horários de Funcionamento</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          {days.map((d) => (
+            <div key={d} className="flex items-center gap-3">
+              <Switch defaultChecked={d !== "Dom"} />
+              <span className="w-12 text-sm font-medium">{d}</span>
+              <Input className="flex-1" defaultValue="08:00" />
+              <span>—</span>
+              <Input className="flex-1" defaultValue="18:00" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function KanbanTab() {
+  const cols = useStore((s) => s.columns);
+  const [selectedCol, setSelectedCol] = useState<KanbanColumn | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Colunas do Kanban</CardTitle>
+            <CardDescription>Reordene, edite ou adicione colunas e automações.</CardDescription>
+          </div>
+          <Button size="sm">
+            <Plus className="mr-1 h-4 w-4" /> Adicionar coluna
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {cols.map((c) => (
+          <div key={c.id} className="flex items-center gap-3 rounded-md border bg-card p-3">
+            <GripVertical className="h-4 w-4 text-muted-foreground" />
+            <span className="h-2.5 w-2.5 rounded-full" style={{ background: c.color }} />
+            <span className="flex-1 text-sm font-medium">{c.name}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSelectedCol(c);
+                setDialogOpen(true);
+              }}
+            >
+              Automações
+              {c.automations && c.automations.length > 0 && (
+                <Badge variant="secondary" className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px]">
+                  {c.automations.length}
+                </Badge>
+              )}
+            </Button>
+            <Button variant="outline" size="sm">
+              Editar
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+        ))}
+      </CardContent>
+
+      <ColumnAutomationsDialog
+        column={selectedCol}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+      />
+    </Card>
+  );
+}
 
 function IntegrationsTab() {
   const { settings, updateSettings, isUpdating } = useSettings();
@@ -166,7 +257,6 @@ function IntegrationsTab() {
 }
 
 function TemplatesTab() {
-...
   const templates = [
     { id: 1, name: "Boas-vindas", channel: "WhatsApp", preview: "Olá {{clienteName}}, recebemos seu veículo..." },
     { id: 2, name: "Orçamento aprovado", channel: "WhatsApp", preview: "Seu orçamento de {{valorTotal}} foi aprovado..." },
