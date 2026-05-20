@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Cliente } from "@/types/database";
 import { toast } from "sonner";
 
-const CLIENTS_KEY = ["clientes"];
+export const CLIENTS_KEY = ["clientes"];
 
 export function useClientes() {
   const { oficinaId } = useAuth();
@@ -19,19 +19,14 @@ export function useClientes() {
       const { data, error } = await supabase
         .from("clientes")
         .select(`
-          id,
-          nome,
-          telefone,
-          email,
-          cpf_cnpj,
-          endereco,
+          *,
           veiculos(count),
           ordens_servico(count)
         `)
         .eq("oficina_id", oficinaId)
         .order("nome");
       if (error) throw error;
-      return (data ?? []) as unknown as (Cliente & { veiculos: [{ count: number }]; ordens_servico: [{ count: number }] })[];
+      return (data ?? []) as any[];
     },
   });
 
@@ -59,10 +54,47 @@ export function useClientes() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: CLIENTS_KEY });
-      toast.success("Cliente cadastrado");
+      toast.success("Cliente cadastrado com sucesso");
     },
     onError: (error: Error) => {
       toast.error("Erro ao cadastrar cliente: " + error.message);
+    },
+  });
+
+  const updateClientMutation = useMutation({
+    mutationFn: async ({ id, ...changes }: Partial<Cliente> & { id: string }) => {
+      const { data, error } = await supabase
+        .from("clientes")
+        .update(changes)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: CLIENTS_KEY });
+      toast.success("Cliente atualizado com sucesso");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao atualizar cliente: " + error.message);
+    },
+  });
+
+  const deleteClientMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("clientes")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: CLIENTS_KEY });
+      toast.success("Cliente removido com sucesso");
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao remover cliente: " + error.message);
     },
   });
 
@@ -70,5 +102,10 @@ export function useClientes() {
     clients: clientesQuery.data ?? [],
     isLoading: clientesQuery.isLoading,
     createClient: createClientMutation.mutateAsync,
+    updateClient: updateClientMutation.mutateAsync,
+    deleteClient: deleteClientMutation.mutateAsync,
+    isCreating: createClientMutation.isPending,
+    isUpdating: updateClientMutation.isPending,
+    isDeleting: deleteClientMutation.isPending,
   };
 }
