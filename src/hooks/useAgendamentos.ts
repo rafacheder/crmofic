@@ -37,9 +37,13 @@ export function useAgendamentos() {
   const createAgendamento = useMutation({
     mutationFn: async (payload: Partial<Agendamento>) => {
       if (!oficinaId) throw new Error("Oficina não identificada");
+      if (!payload.data_hora) throw new Error("Data e hora são obrigatórias");
+
+      const { cliente, veiculo, ...insertPayload } = payload as any;
+      
       const { data, error } = await supabase
         .from("agendamentos")
-        .insert([{ ...payload, oficina_id: oficinaId }])
+        .insert([{ ...insertPayload, data_hora: payload.data_hora, oficina_id: oficinaId }])
         .select()
         .single();
       if (error) throw error;
@@ -54,9 +58,11 @@ export function useAgendamentos() {
 
   const updateAgendamento = useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Agendamento> & { id: string }) => {
+      const { cliente, veiculo, ...updatePayload } = updates as any;
+
       const { data, error } = await supabase
         .from("agendamentos")
-        .update(updates)
+        .update(updatePayload)
         .eq("id", id)
         .select()
         .single();
