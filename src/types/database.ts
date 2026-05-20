@@ -132,3 +132,24 @@ export type CatalogoProduto = {
   estoque_minimo: number | null;
   ativo: boolean | null;
 };
+
+export type OsItem = {
+  id: string;
+  os_id: string;
+  tipo: 'servico' | 'produto';
+  nome: string;
+  quantidade: number;
+  preco_unitario: number;
+  desconto: number;
+  total: number;
+  created_at: string;
+};
+
+export type OsHistorico = {
+  id: string;
+  os_id: string;
+  coluna_origem_id: string | null;
+  coluna_destino_id: string | null;
+  usuario_id: string | null;
+  created_at: string;
+};
