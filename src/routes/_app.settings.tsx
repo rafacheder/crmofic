@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { GripVertical, Trash2, Plus } from "lucide-react";
+import { GripVertical, Trash2, Plus, MessageSquare, Bot, Zap } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -18,6 +18,7 @@ import { useStore, store } from "@/lib/store";
 import { toast } from "sonner";
 import { ColumnAutomationsDialog } from "@/components/column-automations-dialog";
 import { type KanbanColumn } from "@/lib/mock-data";
+import { useSettings } from "@/hooks/useSettings";
 
 export const Route = createFileRoute("/_app/settings")({ component: SettingsPage });
 
@@ -31,13 +32,13 @@ function SettingsPage() {
         <TabsList className="flex w-full flex-wrap">
           <TabsTrigger value="general">Geral</TabsTrigger>
           <TabsTrigger value="kanban">Kanban</TabsTrigger>
-          <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
+          <TabsTrigger value="integrations">Integrações</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="users">Usuários</TabsTrigger>
         </TabsList>
         <TabsContent value="general" className="mt-4"><GeneralTab /></TabsContent>
         <TabsContent value="kanban" className="mt-4"><KanbanTab /></TabsContent>
-        <TabsContent value="whatsapp" className="mt-4"><WhatsappTab /></TabsContent>
+        <TabsContent value="integrations" className="mt-4"><IntegrationsTab /></TabsContent>
         <TabsContent value="templates" className="mt-4"><TemplatesTab /></TabsContent>
         <TabsContent value="users" className="mt-4"><UsersTab /></TabsContent>
       </Tabs>
@@ -138,27 +139,120 @@ function KanbanTab() {
   );
 }
 
-function WhatsappTab() {
-  const url = useStore((s) => s.whaticketUrl);
-  const [val, setVal] = useState(url);
-  const [token, setToken] = useState("");
-  const [iframe, setIframe] = useState(true);
+function IntegrationsTab() {
+  const { settings, updateSettings, isUpdating } = useSettings();
+  const [evolution, setEvolution] = useState({
+    url: "",
+    key: "",
+    instance: ""
+  });
+  const [typebot, setTypebot] = useState({
+    url: "",
+    name: ""
+  });
+
+  useEffect(() => {
+    if (settings) {
+      setEvolution({
+        url: settings.evolution_api_url || "",
+        key: settings.evolution_api_key || "",
+        instance: settings.evolution_instance_name || ""
+      });
+      setTypebot({
+        url: settings.typebot_url || "",
+        name: settings.typebot_name || ""
+      });
+    }
+  }, [settings]);
+
+  const handleSaveEvolution = async () => {
+    await updateSettings({
+      evolution_api_url: evolution.url,
+      evolution_api_key: evolution.key,
+      evolution_instance_name: evolution.instance
+    });
+  };
+
+  const handleSaveTypebot = async () => {
+    await updateSettings({
+      typebot_url: typebot.url,
+      typebot_name: typebot.name
+    });
+  };
+
   return (
-    <Card className="max-w-2xl">
-      <CardHeader><CardTitle>Whaticket</CardTitle><CardDescription>Configure a integração com seu Whaticket.</CardDescription></CardHeader>
-      <CardContent className="space-y-3">
-        <div className="space-y-2"><Label>URL do Whaticket</Label><Input value={val} onChange={(e) => setVal(e.target.value)} placeholder="http://localhost:3333" /></div>
-        <div className="space-y-2"><Label>Token de acesso (opcional)</Label><Input value={token} onChange={(e) => setToken(e.target.value)} type="password" /></div>
-        <div className="flex items-center justify-between rounded-md border p-3">
-          <div><Label>Abrir em iframe dentro do sistema</Label><p className="text-xs text-muted-foreground">Desative para abrir sempre em nova aba.</p></div>
-          <Switch checked={iframe} onCheckedChange={setIframe} />
-        </div>
-        <Button onClick={() => {
-          store.set({ whaticketUrl: val, whaticketConnected: !!val });
-          toast.success(val ? "Conexão configurada com sucesso" : "URL removida");
-        }}>Salvar e Testar Conexão</Button>
-      </CardContent>
-    </Card>
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-primary" />
+            <CardTitle>Evolution API</CardTitle>
+          </div>
+          <CardDescription>Configure o Evolution API para disparar automações via WhatsApp.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>URL da API</Label>
+            <Input 
+              value={evolution.url} 
+              onChange={(e) => setEvolution({ ...evolution, url: e.target.value })} 
+              placeholder="https://api.evolution.com" 
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>API Key</Label>
+            <Input 
+              value={evolution.key} 
+              onChange={(e) => setEvolution({ ...evolution, key: e.target.value })} 
+              type="password" 
+              placeholder="apikey" 
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Nome da Instância</Label>
+            <Input 
+              value={evolution.instance} 
+              onChange={(e) => setEvolution({ ...evolution, instance: e.target.value })} 
+              placeholder="oficina_01" 
+            />
+          </div>
+          <Button onClick={handleSaveEvolution} disabled={isUpdating}>
+            {isUpdating ? "Salvando..." : "Salvar Configurações"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Bot className="h-5 w-5 text-primary" />
+            <CardTitle>Typebot</CardTitle>
+          </div>
+          <CardDescription>Configure o Typebot para criar fluxos de autoatendimento.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>URL do Servidor</Label>
+            <Input 
+              value={typebot.url} 
+              onChange={(e) => setTypebot({ ...typebot, url: e.target.value })} 
+              placeholder="https://typebot.io" 
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Nome do Bot (Slug)</Label>
+            <Input 
+              value={typebot.name} 
+              onChange={(e) => setTypebot({ ...typebot, name: e.target.value })} 
+              placeholder="atendimento-oficina" 
+            />
+          </div>
+          <Button onClick={handleSaveTypebot} disabled={isUpdating}>
+            {isUpdating ? "Salvando..." : "Salvar Configurações"}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
