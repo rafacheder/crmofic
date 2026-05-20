@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { GripVertical, Trash2, Plus, MessageSquare, Bot, Zap, Loader2, UserPlus, Check, X } from "lucide-react";
+import { GripVertical, Trash2, Plus, MessageSquare, Bot, Zap, Loader2, UserPlus, Check, X, Pencil } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -20,6 +20,16 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useStore, store } from "@/lib/store";
 import { toast } from "sonner";
 import { ColumnAutomationsDialog } from "@/components/column-automations-dialog";
@@ -299,6 +309,10 @@ function UsersTab() {
   const { usuarios, isLoading, invite, isInviting, updateUsuario, removeUsuario } = useUsuariosOficina();
   const { usuario: currentUser } = useAuth();
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<{ id: string, nome: string } | null>(null);
+  const [userToEdit, setUserToEdit] = useState<any>(null);
   const [newUserData, setNewUserData] = useState({ nome: "", email: "", cargo: "TECNICO" });
 
   const isAdmin = currentUser?.cargo === "DONO" || currentUser?.cargo === "GERENTE";
@@ -309,6 +323,33 @@ function UsersTab() {
       await invite(newUserData);
       setInviteDialogOpen(false);
       setNewUserData({ nome: "", email: "", cargo: "TECNICO" });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!userToEdit) return;
+    try {
+      await updateUsuario({
+        id: userToEdit.id,
+        nome: userToEdit.nome,
+        cargo: userToEdit.cargo,
+        ativo: userToEdit.ativo
+      });
+      setEditDialogOpen(false);
+      setUserToEdit(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!userToDelete) return;
+    try {
+      await removeUsuario(userToDelete.id);
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
     } catch (err) {
       console.error(err);
     }
@@ -354,53 +395,38 @@ function UsersTab() {
                 <TableCell className="font-medium">{u.nome}</TableCell>
                 <TableCell>{u.email}</TableCell>
                 <TableCell>
-                  {isAdmin && u.id !== currentUser?.id ? (
-                    <Select 
-                      defaultValue={u.cargo || "TECNICO"} 
-                      onValueChange={(v) => updateUsuario({ id: u.id, cargo: v })}
-                    >
-                      <SelectTrigger className="h-8 w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="DONO">Dono</SelectItem>
-                        <SelectItem value="GERENTE">Gerente</SelectItem>
-                        <SelectItem value="TECNICO">Técnico</SelectItem>
-                        <SelectItem value="RECEPCAO">Recepção</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Badge variant="secondary">{u.cargo}</Badge>
-                  )}
+                  <Badge variant="secondary">{u.cargo}</Badge>
                 </TableCell>
                 <TableCell>
-                  {isAdmin && u.id !== currentUser?.id ? (
-                    <div className="flex items-center gap-2">
-                      <Switch 
-                        checked={u.ativo ?? false} 
-                        onCheckedChange={(checked) => updateUsuario({ id: u.id, ativo: checked })} 
-                      />
-                      <span className="text-xs">{u.ativo ? "Ativo" : "Inativo"}</span>
-                    </div>
-                  ) : (
-                    <Badge variant={u.ativo ? "default" : "secondary"}>{u.ativo ? "Ativo" : "Inativo"}</Badge>
-                  )}
+                  <Badge variant={u.ativo ? "default" : "secondary"}>{u.ativo ? "Ativo" : "Inativo"}</Badge>
                 </TableCell>
                 {isAdmin && (
                   <TableCell>
                     {u.id !== currentUser?.id && (
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-destructive"
-                        onClick={() => {
-                          if (confirm(`Remover ${u.nome} da oficina?`)) {
-                            removeUsuario(u.id);
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8"
+                          onClick={() => {
+                            setUserToEdit({ ...u });
+                            setEditDialogOpen(true);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-destructive"
+                          onClick={() => {
+                            setUserToDelete({ id: u.id, nome: u.nome });
+                            setDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     )}
                   </TableCell>
                 )}
@@ -465,6 +491,88 @@ function UsersTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Editar Usuário</DialogTitle>
+            <DialogDescription>
+              Atualize as informações de acesso e cargo deste membro da equipe.
+            </DialogDescription>
+          </DialogHeader>
+          {userToEdit && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Nome Completo</Label>
+                <Input 
+                  id="edit-name" 
+                  value={userToEdit.nome} 
+                  onChange={(e) => setUserToEdit({ ...userToEdit, nome: e.target.value })} 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">E-mail</Label>
+                <Input 
+                  id="edit-email" 
+                  value={userToEdit.email} 
+                  disabled
+                  className="bg-muted"
+                />
+                <p className="text-[10px] text-muted-foreground">O e-mail não pode ser alterado por aqui.</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Cargo</Label>
+                <Select 
+                  value={userToEdit.cargo} 
+                  onValueChange={(v) => setUserToEdit({ ...userToEdit, cargo: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="DONO">Dono</SelectItem>
+                    <SelectItem value="GERENTE">Gerente</SelectItem>
+                    <SelectItem value="TECNICO">Técnico</SelectItem>
+                    <SelectItem value="RECEPCAO">Recepção</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center justify-between space-x-2">
+                <Label htmlFor="user-active">Usuário Ativo</Label>
+                <Switch 
+                  id="user-active"
+                  checked={userToEdit.ativo}
+                  onCheckedChange={(checked) => setUserToEdit({ ...userToEdit, ativo: checked })}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleUpdate}>Salvar Alterações</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover usuário?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover <strong>{userToDelete?.nome}</strong> da oficina? Esta ação não pode ser desfeita e ele perderá acesso imediato ao sistema.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setUserToDelete(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Sim, Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
