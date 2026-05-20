@@ -10,24 +10,23 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useStore } from "@/lib/store";
-import {
-  KANBAN_COLUMNS, clientById, vehicleById, priorityMeta, formatBRL,
-} from "@/lib/mock-data";
+import { useOrders } from "@/hooks/useOrders";
+import { useKanban } from "@/hooks/useKanban";
+import { priorityMeta, formatBRL } from "@/lib/mock-data";
 import { OrderSheet } from "@/components/order-sheet";
 import { NewOrderDialog } from "@/components/new-order-dialog";
 
 export const Route = createFileRoute("/_app/orders")({ component: OrdersPage });
 
 function OrdersPage() {
-  const orders = useStore((s) => s.orders);
-  const [tech, setTech] = useState("ALL");
+  const { orders, isLoading: isLoadingOrders } = useOrders();
+  const { columns } = useKanban();
   const [col, setCol] = useState("ALL");
   const [openId, setOpenId] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
 
   const filtered = orders.filter(
-    (o) => (tech === "ALL" || o.technician === tech) && (col === "ALL" || o.column === col)
+    (o) => (col === "ALL" || o.coluna_id === col)
   );
 
   return (
@@ -39,15 +38,7 @@ function OrdersPage() {
             <SelectTrigger className="w-48"><SelectValue placeholder="Coluna" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">Todas colunas</SelectItem>
-              {KANBAN_COLUMNS.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={tech} onValueChange={setTech}>
-            <SelectTrigger className="w-48"><SelectValue placeholder="Técnico" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Todos técnicos</SelectItem>
-              <SelectItem value="Carlos M.">Carlos M.</SelectItem>
-              <SelectItem value="Bruno L.">Bruno L.</SelectItem>
+              {columns.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
             </SelectContent>
           </Select>
           <Button className="ml-auto" onClick={() => setNewOpen(true)}>
@@ -64,15 +55,18 @@ function OrdersPage() {
                 <TableHead>Veículo</TableHead>
                 <TableHead>Coluna</TableHead>
                 <TableHead>Prioridade</TableHead>
-                <TableHead>Técnico</TableHead>
                 <TableHead className="text-right">Valor</TableHead>
                 <TableHead>Criação</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.length === 0 ? (
+              {isLoadingOrders ? (
                 <TableRow>
-                  <TableCell colSpan={8}>
+                  <TableCell colSpan={7} className="text-center py-12">Carregando...</TableCell>
+                </TableRow>
+              ) : filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7}>
                     <div className="flex flex-col items-center gap-2 py-12 text-muted-foreground">
                       <FileText className="h-8 w-8" />
                       Nenhum registro encontrado
@@ -80,22 +74,21 @@ function OrdersPage() {
                   </TableCell>
                 </TableRow>
               ) : filtered.map((o) => {
-                const cli = clientById(o.clientId);
-                const veh = vehicleById(o.vehicleId);
+                const prio = (o.prioridade ?? "NORMAL") as keyof typeof priorityMeta;
+                const colName = columns.find((c) => c.id === o.coluna_id)?.nome ?? "—";
                 return (
                   <TableRow key={o.id} className="cursor-pointer" onClick={() => setOpenId(o.id)}>
-                    <TableCell className="font-mono text-xs">{o.number}</TableCell>
-                    <TableCell>{cli?.name}</TableCell>
-                    <TableCell>{veh?.plate} • {veh?.model}</TableCell>
-                    <TableCell>{KANBAN_COLUMNS.find((c) => c.id === o.column)?.name}</TableCell>
+                    <TableCell className="font-mono text-xs">{o.numero}</TableCell>
+                    <TableCell>{o.cliente?.nome ?? "—"}</TableCell>
+                    <TableCell>{o.veiculo?.placa ?? "—"} • {o.veiculo?.modelo ?? "—"}</TableCell>
+                    <TableCell>{colName}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className={priorityMeta[o.priority].className}>
-                        {priorityMeta[o.priority].label}
+                      <Badge variant="secondary" className={priorityMeta[prio]?.className}>
+                        {priorityMeta[prio]?.label ?? o.prioridade}
                       </Badge>
                     </TableCell>
-                    <TableCell>{o.technician}</TableCell>
-                    <TableCell className="text-right">{formatBRL(o.total)}</TableCell>
-                    <TableCell>{new Date(o.createdAt).toLocaleDateString("pt-BR")}</TableCell>
+                    <TableCell className="text-right">{formatBRL(o.valor_total ?? 0)}</TableCell>
+                    <TableCell>{o.created_at ? new Date(o.created_at).toLocaleDateString("pt-BR") : "—"}</TableCell>
                   </TableRow>
                 );
               })}
