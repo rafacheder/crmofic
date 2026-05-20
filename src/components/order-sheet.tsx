@@ -16,16 +16,20 @@ import {
 import { toast } from "sonner";
 import { useOrder } from "@/hooks/useOrder";
 import { useKanban } from "@/hooks/useKanban";
+import { useOsItens } from "@/hooks/useOsItens";
+import { AddOsItemDialog } from "@/components/add-os-item-dialog";
 import {
   priorityMeta, budgetMeta,
   formatBRL, initials, timeSince,
 } from "@/lib/mock-data";
-import { Send, ImagePlus, Plus } from "lucide-react";
+import { Send, ImagePlus, Plus, Trash2 } from "lucide-react";
 
 export function OrderSheet({ orderId, onClose }: { orderId: string | null; onClose: () => void }) {
   const { order, isLoading, updateOrder, moveOrder } = useOrder(orderId);
+  const { itens, removeItem } = useOsItens(orderId);
   const { columns } = useKanban();
   const [tab, setTab] = useState("detalhes");
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   if (!orderId) return null;
   if (isLoading) return null;
@@ -33,7 +37,7 @@ export function OrderSheet({ orderId, onClose }: { orderId: string | null; onClo
 
   const prio = (order.prioridade ?? "NORMAL") as keyof typeof priorityMeta;
   const budgetStatus = (order.status_orcamento ?? "PENDENTE") as keyof typeof budgetMeta;
-  const subTotal = (order.itens ?? []).reduce((acc: number, it: any) => acc + (it.quantidade * it.preco_unitario) - it.desconto, 0);
+  const subTotal = itens.reduce((acc, it) => acc + Number(it.total), 0);
 
   return (
     <Sheet open={!!orderId} onOpenChange={(o) => !o && onClose()}>
@@ -102,7 +106,9 @@ export function OrderSheet({ orderId, onClose }: { orderId: string | null; onClo
 
           <TabsContent value="itens" className="space-y-3">
             <div className="flex justify-end">
-              <Button size="sm" variant="outline"><Plus className="mr-1 h-4 w-4" /> Adicionar item</Button>
+              <Button size="sm" variant="outline" onClick={() => setAddDialogOpen(true)}>
+                <Plus className="mr-1 h-4 w-4" /> Adicionar item
+              </Button>
             </div>
             <Table>
               <TableHeader>
@@ -112,24 +118,46 @@ export function OrderSheet({ orderId, onClose }: { orderId: string | null; onClo
                   <TableHead className="text-right">Preço</TableHead>
                   <TableHead className="text-right">Desc.</TableHead>
                   <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="w-10"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(order.itens ?? []).map((it: any) => (
-                  <TableRow key={it.id}>
-                    <TableCell>
-                      <div className="font-medium">{it.nome}</div>
-                      <div className="text-xs text-muted-foreground capitalize">{it.tipo === "service" ? "Serviço" : "Peça"}</div>
+                {itens.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground italic">
+                      Nenhum item adicionado à OS.
                     </TableCell>
-                    <TableCell className="text-right">{it.quantidade}</TableCell>
-                    <TableCell className="text-right">{formatBRL(it.preco_unitario)}</TableCell>
-                    <TableCell className="text-right">{formatBRL(it.desconto)}</TableCell>
-                    <TableCell className="text-right font-medium">{formatBRL(it.quantidade * it.preco_unitario - it.desconto)}</TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  itens.map((it) => (
+                    <TableRow key={it.id}>
+                      <TableCell>
+                        <div className="font-medium">{it.nome}</div>
+                        <div className="text-xs text-muted-foreground capitalize">
+                          {it.tipo === "servico" ? "Serviço" : "Peça"}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">{it.quantidade}</TableCell>
+                      <TableCell className="text-right">{formatBRL(it.preco_unitario)}</TableCell>
+                      <TableCell className="text-right text-destructive">{it.desconto > 0 ? `-${formatBRL(it.desconto)}` : "—"}</TableCell>
+                      <TableCell className="text-right font-medium">{formatBRL(it.total)}</TableCell>
+                      <TableCell>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-destructive"
+                          onClick={() => removeItem(it.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
                 <TableRow>
                   <TableCell colSpan={4} className="text-right font-semibold">Subtotal</TableCell>
                   <TableCell className="text-right font-bold">{formatBRL(subTotal)}</TableCell>
+                  <TableCell></TableCell>
                 </TableRow>
               </TableBody>
             </Table>
@@ -171,6 +199,11 @@ export function OrderSheet({ orderId, onClose }: { orderId: string | null; onClo
             </ol>
           </TabsContent>
         </Tabs>
+        <AddOsItemDialog 
+          osId={orderId} 
+          open={addDialogOpen} 
+          onOpenChange={setAddDialogOpen} 
+        />
       </SheetContent>
     </Sheet>
   );
