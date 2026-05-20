@@ -17,7 +17,8 @@ export function usePublicOrder(token: string) {
           cliente:clientes(*),
           veiculo:veiculos(*),
           itens:os_itens(*),
-          historico:os_historico(*)
+          historico:os_historico(*),
+          fotos:os_fotos(*)
         `)
         .eq("token_publico", token)
         .maybeSingle();
@@ -27,7 +28,8 @@ export function usePublicOrder(token: string) {
       
       return data as unknown as OrdemServico & { 
         itens: OsItem[], 
-        historico: OsHistorico[] 
+        historico: OsHistorico[],
+        fotos: OsFoto[]
       };
     },
   });
