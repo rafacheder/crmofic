@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { GripVertical, Trash2, Plus, MessageSquare, Bot, Zap } from "lucide-react";
+import { GripVertical, Trash2, Plus, MessageSquare, Bot, Zap, Loader2, UserPlus, Check, X } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -14,11 +14,19 @@ import {
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
 import { useStore, store } from "@/lib/store";
 import { toast } from "sonner";
 import { ColumnAutomationsDialog } from "@/components/column-automations-dialog";
 import { type KanbanColumn } from "@/lib/mock-data";
 import { useSettings } from "@/hooks/useSettings";
+import { useUsuariosOficina } from "@/hooks/useUsuariosOficina";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Route = createFileRoute("/_app/settings")({ component: SettingsPage });
 
@@ -288,35 +296,175 @@ function TemplatesTab() {
 }
 
 function UsersTab() {
-  const users = [
-    { name: "Ana Ribeiro", email: "ana@oficina.com", role: "DONO", active: true },
-    { name: "Carlos Mendes", email: "carlos@oficina.com", role: "MECÂNICO", active: true },
-    { name: "Bruno Lima", email: "bruno@oficina.com", role: "MECÂNICO", active: true },
-    { name: "Júlia Santos", email: "julia@oficina.com", role: "RECEPCIONISTA", active: false },
-  ];
+  const { usuarios, isLoading, invite, isInviting, updateUsuario, removeUsuario } = useUsuariosOficina();
+  const { usuario: currentUser } = useAuth();
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [newUserData, setNewUserData] = useState({ nome: "", email: "", cargo: "TECNICO" });
+
+  const isAdmin = currentUser?.cargo === "DONO" || currentUser?.cargo === "GERENTE";
+
+  const handleInvite = async () => {
+    if (!newUserData.nome || !newUserData.email) return;
+    try {
+      await invite(newUserData);
+      setInviteDialogOpen(false);
+      setNewUserData({ nome: "", email: "", cargo: "TECNICO" });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Usuários</CardTitle>
-          <Button size="sm"><Plus className="mr-1 h-4 w-4" /> Convidar</Button>
+          <div>
+            <CardTitle>Equipe da Oficina</CardTitle>
+            <CardDescription>Gerencie quem tem acesso ao sistema e seus níveis de permissão.</CardDescription>
+          </div>
+          {isAdmin && (
+            <Button size="sm" onClick={() => setInviteDialogOpen(true)}>
+              <UserPlus className="mr-1 h-4 w-4" /> Convidar Usuário
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent>
         <Table>
-          <TableHeader><TableRow><TableHead>Nome</TableHead><TableHead>Email</TableHead><TableHead>Cargo</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Cargo</TableHead>
+              <TableHead>Status</TableHead>
+              {isAdmin && <TableHead className="w-10"></TableHead>}
+            </TableRow>
+          </TableHeader>
           <TableBody>
-            {users.map((u) => (
-              <TableRow key={u.email}>
-                <TableCell className="font-medium">{u.name}</TableCell>
+            {usuarios.map((u) => (
+              <TableRow key={u.id}>
+                <TableCell className="font-medium">{u.nome}</TableCell>
                 <TableCell>{u.email}</TableCell>
-                <TableCell><Badge variant="secondary">{u.role}</Badge></TableCell>
-                <TableCell><Badge variant={u.active ? "default" : "secondary"}>{u.active ? "Ativo" : "Inativo"}</Badge></TableCell>
+                <TableCell>
+                  {isAdmin && u.id !== currentUser?.id ? (
+                    <Select 
+                      defaultValue={u.cargo || "TECNICO"} 
+                      onValueChange={(v) => updateUsuario({ id: u.id, cargo: v })}
+                    >
+                      <SelectTrigger className="h-8 w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="DONO">Dono</SelectItem>
+                        <SelectItem value="GERENTE">Gerente</SelectItem>
+                        <SelectItem value="TECNICO">Técnico</SelectItem>
+                        <SelectItem value="RECEPCAO">Recepção</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Badge variant="secondary">{u.cargo}</Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {isAdmin && u.id !== currentUser?.id ? (
+                    <div className="flex items-center gap-2">
+                      <Switch 
+                        checked={u.ativo ?? false} 
+                        onCheckedChange={(checked) => updateUsuario({ id: u.id, ativo: checked })} 
+                      />
+                      <span className="text-xs">{u.ativo ? "Ativo" : "Inativo"}</span>
+                    </div>
+                  ) : (
+                    <Badge variant={u.ativo ? "default" : "secondary"}>{u.ativo ? "Ativo" : "Inativo"}</Badge>
+                  )}
+                </TableCell>
+                {isAdmin && (
+                  <TableCell>
+                    {u.id !== currentUser?.id && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-destructive"
+                        onClick={() => {
+                          if (confirm(`Remover ${u.nome} da oficina?`)) {
+                            removeUsuario(u.id);
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </CardContent>
+
+      <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Convidar Membro</DialogTitle>
+            <DialogDescription>
+              Enviaremos um convite por e-mail para que a pessoa possa criar sua senha e acessar a oficina.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome Completo</Label>
+              <Input 
+                id="name" 
+                value={newUserData.nome} 
+                onChange={(e) => setNewUserData({ ...newUserData, nome: e.target.value })} 
+                placeholder="Ex: João Silva"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">E-mail</Label>
+              <Input 
+                id="email" 
+                type="email"
+                value={newUserData.email} 
+                onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })} 
+                placeholder="exemplo@email.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Cargo</Label>
+              <Select 
+                value={newUserData.cargo} 
+                onValueChange={(v) => setNewUserData({ ...newUserData, cargo: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="DONO">Dono</SelectItem>
+                  <SelectItem value="GERENTE">Gerente</SelectItem>
+                  <SelectItem value="TECNICO">Técnico</SelectItem>
+                  <SelectItem value="RECEPCAO">Recepção</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleInvite} disabled={isInviting || !newUserData.nome || !newUserData.email}>
+              {isInviting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Enviar Convite
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

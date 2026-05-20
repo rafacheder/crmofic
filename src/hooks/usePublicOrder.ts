@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { OrdemServico, OsItem, OsHistorico } from "@/types/database";
+import { OrdemServico, OsItem, OsHistorico, OsFoto } from "@/types/database";
 import { toast } from "sonner";
 
 export function usePublicOrder(token: string) {
@@ -17,7 +17,8 @@ export function usePublicOrder(token: string) {
           cliente:clientes(*),
           veiculo:veiculos(*),
           itens:os_itens(*),
-          historico:os_historico(*)
+          historico:os_historico(*),
+          fotos:os_fotos(*)
         `)
         .eq("token_publico", token)
         .maybeSingle();
@@ -27,7 +28,8 @@ export function usePublicOrder(token: string) {
       
       return data as unknown as OrdemServico & { 
         itens: OsItem[], 
-        historico: OsHistorico[] 
+        historico: OsHistorico[],
+        fotos: OsFoto[]
       };
     },
   });

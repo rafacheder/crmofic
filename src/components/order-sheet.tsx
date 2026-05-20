@@ -17,16 +17,18 @@ import { toast } from "sonner";
 import { useOrder } from "@/hooks/useOrder";
 import { useKanban } from "@/hooks/useKanban";
 import { useOsItens } from "@/hooks/useOsItens";
+import { useOsFotos } from "@/hooks/useOsFotos";
 import { AddOsItemDialog } from "@/components/add-os-item-dialog";
 import {
   priorityMeta, budgetMeta,
   formatBRL, initials, timeSince,
 } from "@/lib/mock-data";
-import { Send, ImagePlus, Plus, Trash2 } from "lucide-react";
+import { Send, ImagePlus, Plus, Trash2, X, Loader2 } from "lucide-react";
 
 export function OrderSheet({ orderId, onClose }: { orderId: string | null; onClose: () => void }) {
   const { order, isLoading, updateOrder, moveOrder } = useOrder(orderId);
-  const { itens, removeItem } = useOsItens(orderId);
+  const { itens, removeItem: removeOsItem } = useOsItens(orderId);
+  const { fotos, uploadFoto, removeFoto, isUploading } = useOsFotos(orderId);
   const { columns } = useKanban();
   const [tab, setTab] = useState("detalhes");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -146,7 +148,7 @@ export function OrderSheet({ orderId, onClose }: { orderId: string | null; onClo
                           variant="ghost" 
                           size="icon" 
                           className="h-8 w-8 text-destructive"
-                          onClick={() => removeItem(it.id)}
+                          onClick={() => removeOsItem(it.id)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -163,18 +165,50 @@ export function OrderSheet({ orderId, onClose }: { orderId: string | null; onClo
             </Table>
           </TabsContent>
 
-          <TabsContent value="fotos">
-            <div className="grid grid-cols-2 gap-2">
-              {(order.fotos ?? []).map((f: any) => (
-                <div key={f.id} className="aspect-square rounded-md overflow-hidden border">
-                   <img src={f.url} alt="Foto da OS" className="w-full h-full object-cover" />
+          <TabsContent value="fotos" className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {fotos.map((f) => (
+                <div key={f.id} className="group relative aspect-square rounded-md overflow-hidden border bg-muted">
+                   <img src={f.url} alt="Foto da OS" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                   <Button 
+                     variant="destructive" 
+                     size="icon" 
+                     className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                     onClick={() => removeFoto({ id: f.id, url: f.url })}
+                   >
+                     <X className="h-3 w-3" />
+                   </Button>
                 </div>
               ))}
             </div>
-            <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed py-12 text-center mt-2">
-              <ImagePlus className="h-10 w-10 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Adicionar novas fotos.</p>
-              <Button variant="outline" size="sm">Adicionar foto</Button>
+            
+            <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed py-12 text-center">
+              {isUploading ? (
+                <>
+                  <Loader2 className="h-10 w-10 text-muted-foreground animate-spin" />
+                  <p className="text-sm text-muted-foreground">Enviando fotos...</p>
+                </>
+              ) : (
+                <>
+                  <ImagePlus className="h-10 w-10 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">Adicionar novas fotos (JPG, PNG).</p>
+                  <Button variant="outline" size="sm" asChild>
+                    <label className="cursor-pointer">
+                      Selecionar fotos
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        multiple 
+                        className="hidden" 
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          files.forEach(file => uploadFoto(file));
+                        }}
+                      />
+                    </label>
+                  </Button>
+                </>
+              )}
             </div>
           </TabsContent>
 

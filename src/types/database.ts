@@ -133,6 +133,13 @@ export type CatalogoProduto = {
   ativo: boolean | null;
 };
 
+export type OsFoto = {
+  id: string;
+  os_id: string;
+  url: string;
+  created_at: string;
+};
+
 export type OsItem = {
   id: string;
   os_id: string;
