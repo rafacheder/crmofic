@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Search, RefreshCw, GripVertical } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
@@ -100,7 +100,7 @@ function KanbanPage() {
       </div>
 
       <div className="flex flex-1 gap-3 overflow-x-auto p-4">
-        {columns.map((col) => {
+        {useMemo(() => columns.map((col) => {
           const cards = filtered.filter((o) => o.coluna_id === col.id);
           return (
             <div
@@ -140,7 +140,7 @@ function KanbanPage() {
               </div>
             </div>
           );
-        })}
+        }), [columns, filtered, dragOver, newOpen, openId])}
       </div>
 
       <OrderSheet orderId={openId} onClose={() => setOpenId(null)} />
@@ -149,9 +149,9 @@ function KanbanPage() {
   );
 }
 
-function OrderCard({
+const OrderCard = React.memo(({
   order, onClick, onDragStart,
-}: { order: OrdemServico; onClick: () => void; onDragStart: () => void }) {
+}: { order: OrdemServico; onClick: () => void; onDragStart: () => void }) => {
   const cli = order.cliente;
   const veh = order.veiculo;
 
@@ -204,4 +204,4 @@ function OrderCard({
       </div>
     </div>
   );
-}
+});
