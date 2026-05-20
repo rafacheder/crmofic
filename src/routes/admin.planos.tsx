@@ -37,8 +37,10 @@ const featLabels: Record<string, string> = {
 const allFeatures = Object.keys(featLabels);
 
 export default function AdminPlanos() {
-  const { planos, upsertPlano, isUpdating } = useAdmin();
+  const { planos, upsertPlano, excluirPlano, isUpdating } = useAdmin();
   const [editingPlano, setEditingPlano] = useState<Partial<Plano> | null>(null);
+  const [planoParaExcluir, setPlanoParaExcluir] = useState<Plano | null>(null);
+
 
   const handleOpenDialog = (plano?: Plano) => {
     if (plano) {
@@ -69,6 +71,13 @@ export default function AdminPlanos() {
       : [...current, feat];
     setEditingPlano({ ...editingPlano, funcionalidades: next });
   };
+
+  const handleExcluir = async () => {
+    if (!planoParaExcluir) return;
+    await excluirPlano(planoParaExcluir.id);
+    setPlanoParaExcluir(null);
+  };
+
 
   return (
     <div className="space-y-5">
@@ -120,14 +129,25 @@ export default function AdminPlanos() {
                   </div>
                 ))}
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute bottom-3 right-3 h-8 text-zinc-400 hover:text-white hover:bg-zinc-800 gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => handleOpenDialog(p)}
-              >
-                <Pencil className="h-3 w-3" /> Editar
-              </Button>
+              <div className="absolute bottom-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-zinc-400 hover:text-white hover:bg-zinc-800 gap-1"
+                  onClick={() => handleOpenDialog(p)}
+                >
+                  <Pencil className="h-3 w-3" /> Editar
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-zinc-500 hover:text-red-400 hover:bg-red-950/30"
+                  onClick={() => setPlanoParaExcluir(p)}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+
             </CardContent>
           </Card>
         ))}
@@ -233,6 +253,31 @@ export default function AdminPlanos() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!planoParaExcluir} onOpenChange={(open) => !open && setPlanoParaExcluir(null)}>
+        <AlertDialogContent className="border-zinc-700 bg-zinc-900 text-zinc-100">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Plano</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-400">
+              Tem certeza que deseja excluir o plano <span className="text-zinc-100 font-semibold">{planoParaExcluir?.nome}</span>? 
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-transparent border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleExcluir}
+              className="bg-red-600 text-white hover:bg-red-700 border-none"
+              disabled={isUpdating}
+            >
+              {isUpdating ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+
   );
 }
