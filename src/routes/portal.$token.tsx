@@ -106,6 +106,7 @@ function PortalPage() {
               )}
             </ul>
           </CardContent>
+        </Card>
         <Card>
           <CardContent className="pt-6 space-y-4">
             <h3 className="text-sm font-semibold">Fotos do veículo</h3>
