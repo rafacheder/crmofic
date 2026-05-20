@@ -1,10 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import React from 'react';
 
 // Mock das rotas exporta os componentes
-// Nota: Em TanStack Router, os componentes costumam ser exportados como 'component' dentro do objeto Route
-// mas aqui vamos importar o componente interno por conveniência do smoke test.
 import { Route as OficinasRoute } from "../admin.oficinas";
 import { Route as PlanosRoute } from "../admin.planos";
 
@@ -31,12 +30,12 @@ vi.mock("@/hooks/useAdmin", () => ({
 }));
 
 vi.mock("@tanstack/react-router", () => ({
-  createFileRoute: () => () => ({ component: () => <div>Route</div> }),
+  createFileRoute: () => (opts: any) => ({ options: opts }),
 }));
 
 describe("Admin Routes Smoke Tests", () => {
   it("deve renderizar a página de oficinas sem quebrar", () => {
-    const OficinasComponent = OficinasRoute.options.component;
+    const OficinasComponent = (OficinasRoute as any).options.component;
     render(
       <QueryClientProvider client={queryClient}>
         <OficinasComponent />
@@ -46,7 +45,7 @@ describe("Admin Routes Smoke Tests", () => {
   });
 
   it("deve renderizar a página de planos sem quebrar", () => {
-    const PlanosComponent = PlanosRoute.options.component;
+    const PlanosComponent = (PlanosRoute as any).options.component;
     render(
       <QueryClientProvider client={queryClient}>
         <PlanosComponent />
