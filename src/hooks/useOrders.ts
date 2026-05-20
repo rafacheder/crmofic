@@ -94,39 +94,5 @@ export function useOrders() {
   };
 }
 
-export function useClients() {
-  const { oficinaId } = useAuth();
+// Removed useClients and useVehicles from here, use specialized hooks instead.
 
-  return useQuery({
-    queryKey: ["clientes", oficinaId],
-    enabled: !!oficinaId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("clientes")
-        .select("*")
-        .eq("oficina_id", oficinaId as string)
-        .order("nome");
-      if (error) throw error;
-      return (data ?? []) as unknown as Cliente[];
-    },
-  });
-}
-
-export function useVehicles(clienteId?: string | null) {
-  const { oficinaId } = useAuth();
-
-  return useQuery({
-    queryKey: ["veiculos", oficinaId, clienteId],
-    enabled: !!oficinaId && !!clienteId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("veiculos")
-        .select("*")
-        .eq("oficina_id", oficinaId as string)
-        .eq("cliente_id", clienteId as string)
-        .order("placa");
-      if (error) throw error;
-      return (data ?? []) as unknown as Veiculo[];
-    },
-  });
-}
