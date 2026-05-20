@@ -196,7 +196,35 @@ export function useAdmin() {
     onError: (e: Error) => toast.error("Erro: " + e.message),
   });
 
+  // Excluir plano
+  const excluirPlano = useMutation({
+    mutationFn: async (id: string) => {
+      // Verifica se há oficinas usando este plano
+      const { count, error: countErr } = await supabase
+        .from("oficinas")
+        .select("*", { count: "exact", head: true })
+        .eq("plano_id", id);
+      
+      if (countErr) throw countErr;
+      if (count && count > 0) {
+        throw new Error(`Este plano não pode ser excluído pois está sendo usado por ${count} oficina(s).`);
+      }
+
+      const { error } = await supabase
+        .from("planos")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["planos"] });
+      toast.success("Plano excluído com sucesso");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   // Histórico de pagamentos de uma oficina
+
   const useHistoricoPagamentos = (oficina_id: string) =>
     useQuery({
       queryKey: ["assinaturas", oficina_id],
@@ -223,11 +251,14 @@ export function useAdmin() {
     registrarPagamento: registrarPagamento.mutateAsync,
     upsertPlano: upsertPlano.mutateAsync,
     togglePlanoAtivo: togglePlanoAtivo.mutateAsync,
+    excluirPlano: excluirPlano.mutateAsync,
     isUpdating: 
       atualizarOficina.isPending || 
       registrarPagamento.isPending || 
       upsertPlano.isPending || 
-      togglePlanoAtivo.isPending,
+      togglePlanoAtivo.isPending ||
+      excluirPlano.isPending,
+
     useHistoricoPagamentos,
   };
 }
