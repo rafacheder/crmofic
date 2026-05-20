@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useAdmin, Plano } from "@/hooks/useAdmin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Plus, Pencil, Save, X } from "lucide-react";
+import { Check, Plus, Pencil, Save, X, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,17 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 
 export const Route = createFileRoute("/admin/planos")({ component: AdminPlanos });
 
@@ -254,7 +265,7 @@ export default function AdminPlanos() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!planoParaExcluir} onOpenChange={(open) => !open && setPlanoParaExcluir(null)}>
+      <AlertDialog open={!!planoParaExcluir} onOpenChange={(open: boolean) => !open && setPlanoParaExcluir(null)}>
         <AlertDialogContent className="border-zinc-700 bg-zinc-900 text-zinc-100">
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir Plano</AlertDialogTitle>
