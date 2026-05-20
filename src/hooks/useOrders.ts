@@ -58,12 +58,12 @@ export function useOrders() {
       }
 
       // 3. Insert the order
-      const { cliente, veiculo, ...insertPayload } = payload;
+      const { cliente, veiculo, ...insertPayload } = payload as any;
       
       const { data, error } = await supabase
         .from("ordens_servico")
         .insert({
-          ...(insertPayload as any),
+          ...insertPayload,
           numero,
           oficina_id: oficinaId,
           coluna_id: colId,
@@ -104,7 +104,7 @@ export function useClients() {
       const { data, error } = await supabase
         .from("clientes")
         .select("*")
-        .eq("oficina_id", oficinaId)
+        .eq("oficina_id", oficinaId as string)
         .order("nome");
       if (error) throw error;
       return (data ?? []) as unknown as Cliente[];
@@ -122,7 +122,7 @@ export function useVehicles(clienteId?: string | null) {
       const { data, error } = await supabase
         .from("veiculos")
         .select("*")
-        .eq("oficina_id", oficinaId)
+        .eq("oficina_id", oficinaId as string)
         .eq("cliente_id", clienteId as string)
         .order("placa");
       if (error) throw error;
