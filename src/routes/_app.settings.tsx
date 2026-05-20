@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { GripVertical, Trash2, Plus, MessageSquare, Bot, Zap } from "lucide-react";
+import { GripVertical, Trash2, Plus, MessageSquare, Bot, Zap, Loader2, UserPlus, Check, X } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
