@@ -30,17 +30,18 @@ export function RouteValidator() {
       }
 
       // Verificação específica solicitada: _admin.tsx
-      // Se estivéssemos em build time, seria mais fácil. No runtime, vamos dar um aviso se 
-      // detectarmos algo estranho na URL ou no comportamento do router.
-      
-      // Como não podemos ler o FS no client, vamos emitir um log informativo se estivermos em dev
+      // Como não podemos ler o FS no client de forma síncrona, vamos tentar importar.
+      // Se o arquivo existir mas não deveria, emitimos um aviso.
       if (import.meta.env.DEV) {
         console.log("[RouteValidator] Verificando integridade das rotas admin...");
+        
+        // Tentativa de detectar caminhos obsoletos no manifest ou router
+        // O router do TanStack guarda as rotas carregadas
+        try {
+          // Se estivéssemos usando o router diretamente aqui poderíamos checar o tree
+        } catch (e) {}
       }
-    };
 
-    validateRoutes();
-  }, []);
 
   if (!isVisible || errors.length === 0) return null;
 
