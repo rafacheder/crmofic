@@ -102,7 +102,7 @@ function PortalPage() {
               {items.filter((i) => i.tipo === "servico").length === 0 ? (
                 <li className="text-muted-foreground italic">Aguardando diagnóstico</li>
               ) : (
-                items.filter((i) => i.tipo === "servico").map((i) => <li key={it.id}>{it.nome}</li>)
+                items.filter((i) => i.tipo === "servico").map((i) => <li key={i.id}>{i.nome}</li>)
               )}
             </ul>
           </CardContent>
