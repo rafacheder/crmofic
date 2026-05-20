@@ -27,7 +27,8 @@ import { Send, ImagePlus, Plus, Trash2, X, Loader2 } from "lucide-react";
 
 export function OrderSheet({ orderId, onClose }: { orderId: string | null; onClose: () => void }) {
   const { order, isLoading, updateOrder, moveOrder } = useOrder(orderId);
-  const { itens, removeItem } = useOsItens(orderId);
+  const { itens, removeItem: removeOsItem } = useOsItens(orderId);
+  const { fotos, uploadFoto, removeFoto, isUploading } = useOsFotos(orderId);
   const { columns } = useKanban();
   const [tab, setTab] = useState("detalhes");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
