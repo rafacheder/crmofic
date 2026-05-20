@@ -9,16 +9,18 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
-import { useOrders, useClients, useVehicles } from "@/hooks/useOrders";
+import { useOrders } from "@/hooks/useOrders";
+import { useClientes } from "@/hooks/useClientes";
+import { useVehicles } from "@/hooks/useVehicles";
 import { type Priority } from "@/lib/mock-data";
+import { toast } from "sonner";
 
 export function NewOrderDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { createOrder, isCreating } = useOrders();
-  const { data: clients = [] } = useClients();
+  const { clients } = useClientes();
   const [clientId, setClientId] = useState("");
   const [vehicleId, setVehicleId] = useState("");
-  const { data: vehicles = [] } = useVehicles(clientId);
+  const { vehicles } = useVehicles(clientId);
   
   const [priority, setPriority] = useState<Priority>("NORMAL");
   const [tech, setTech] = useState("Carlos M.");
@@ -38,7 +40,7 @@ export function NewOrderDialog({ open, onOpenChange }: { open: boolean; onOpenCh
       await createOrder({
         cliente_id: clientId,
         veiculo_id: vehicleId,
-        prioridade: priority,
+        prioridade: priority as any,
         reclamacao: complaint,
         km_entrada: kmIn ? Number(kmIn) : null,
         data_agendada: scheduledAt ? new Date(scheduledAt).toISOString() : null,
@@ -67,7 +69,7 @@ export function NewOrderDialog({ open, onOpenChange }: { open: boolean; onOpenCh
             <Select value={clientId} onValueChange={(v) => { setClientId(v); setVehicleId(""); }}>
               <SelectTrigger><SelectValue placeholder="Selecione o cliente" /></SelectTrigger>
               <SelectContent>
-                {clients.map((c) => (
+                {(clients || []).map((c: any) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.nome}
                   </SelectItem>
@@ -80,7 +82,7 @@ export function NewOrderDialog({ open, onOpenChange }: { open: boolean; onOpenCh
             <Select value={vehicleId} onValueChange={setVehicleId} disabled={!clientId}>
               <SelectTrigger><SelectValue placeholder="Selecione o veículo" /></SelectTrigger>
               <SelectContent>
-                {vehicles.map((v) => (
+                {(vehicles || []).map((v: any) => (
                   <SelectItem key={v.id} value={v.id}>
                     {v.placa} — {v.marca} {v.modelo}
                   </SelectItem>

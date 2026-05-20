@@ -16,7 +16,8 @@ import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { useStore, store } from "@/lib/store";
-import { useClients, useVehicles } from "@/hooks/useOrders";
+import { useClientes } from "@/hooks/useClientes";
+import { useVehicles } from "@/hooks/useVehicles";
 import { type Appointment } from "@/lib/mock-data";
 import { toast } from "sonner";
 
@@ -33,7 +34,7 @@ const statusColor: Record<Appointment["status"], string> = {
 
 function AppointmentsPage() {
   const items = useStore((s) => s.appointments);
-  const { data: clients = [] } = useClients();
+  const { clients } = useClientes();
   const [status, setStatus] = useState("ALL");
   const [open, setOpen] = useState(false);
 
@@ -73,7 +74,7 @@ function AppointmentsPage() {
                   </div>
                 </TableCell></TableRow>
               ) : filtered.map((a) => {
-                const cli = clients.find((c: any) => c.id === a.clientId) as any;
+                const cli = (clients || []).find((c: any) => c.id === a.clientId) as any;
                 return (
                   <TableRow key={a.id}>
                     <TableCell>{new Date(a.datetime).toLocaleString("pt-BR")}</TableCell>
@@ -102,10 +103,10 @@ function AppointmentsPage() {
 }
 
 function NewAppointmentDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
-  const { data: clients = [] } = useClients();
+  const { clients } = useClientes();
   const [clientId, setClientId] = useState("");
   const [vehicleId, setVehicleId] = useState("");
-  const { data: vehicles = [] } = useVehicles(clientId);
+  const { vehicles } = useVehicles(clientId);
   const [datetime, setDatetime] = useState("");
   const [svc, setSvc] = useState("");
   return (
@@ -130,14 +131,14 @@ function NewAppointmentDialog({ open, onOpenChange }: { open: boolean; onOpenCha
             <Label>Cliente</Label>
             <Select value={clientId} onValueChange={(v) => { setClientId(v); setVehicleId(""); }}>
               <SelectTrigger><SelectValue placeholder="Cliente" /></SelectTrigger>
-              <SelectContent>{clients.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent>
+              <SelectContent>{(clients || []).map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
             <Label>Veículo</Label>
             <Select value={vehicleId} onValueChange={setVehicleId} disabled={!clientId}>
               <SelectTrigger><SelectValue placeholder="Veículo" /></SelectTrigger>
-              <SelectContent>{vehicles.map((v: any) => <SelectItem key={v.id} value={v.id}>{v.placa} — {v.modelo}</SelectItem>)}</SelectContent>
+              <SelectContent>{(vehicles || []).map((v: any) => <SelectItem key={v.id} value={v.id}>{v.placa} — {v.modelo}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="space-y-2"><Label>Data/Hora</Label><Input type="datetime-local" value={datetime} onChange={(e) => setDatetime(e.target.value)} /></div>

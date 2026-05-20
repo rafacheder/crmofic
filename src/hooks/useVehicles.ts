@@ -40,8 +40,10 @@ export function useVehicles(clienteId?: string | null) {
         .from("veiculos")
         .insert({
           ...novo,
+          placa: novo.placa as string, // Ensure type safety for required field
           oficina_id: oficinaId,
         })
+
         .select()
         .single();
       if (error) throw error;

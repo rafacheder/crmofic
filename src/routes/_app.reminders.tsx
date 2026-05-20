@@ -16,7 +16,7 @@ import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { useStore, store } from "@/lib/store";
-import { useClients } from "@/hooks/useOrders";
+import { useClientes } from "@/hooks/useClientes";
 import { type Reminder } from "@/lib/mock-data";
 import { toast } from "sonner";
 
@@ -31,7 +31,7 @@ const statusColor: Record<Reminder["status"], string> = {
 
 function RemindersPage() {
   const items = useStore((s) => s.reminders);
-  const { data: clients = [] } = useClients();
+  const { clients } = useClientes();
   const [type, setType] = useState("ALL");
   const [status, setStatus] = useState("ALL");
   const [open, setOpen] = useState(false);
@@ -79,7 +79,7 @@ function RemindersPage() {
                   </div>
                 </TableCell></TableRow>
               ) : filtered.map((r) => {
-                const cli = clients.find((c: any) => c.id === r.clientId) as any;
+                const cli = (clients || []).find((c: any) => c.id === r.clientId) as any;
                 return (
                   <TableRow key={r.id}>
                     <TableCell>{r.type}</TableCell>
@@ -101,7 +101,7 @@ function RemindersPage() {
 }
 
 function NewReminderDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
-  const { data: clients = [] } = useClients();
+  const { clients } = useClientes();
   const [form, setForm] = useState<Partial<Reminder>>({ type: "Troca de Óleo", channel: "WhatsApp", status: "PENDENTE" });
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -130,7 +130,7 @@ function NewReminderDialog({ open, onOpenChange }: { open: boolean; onOpenChange
             <Label>Cliente</Label>
             <Select value={form.clientId} onValueChange={(v) => setForm({ ...form, clientId: v })}>
               <SelectTrigger><SelectValue placeholder="Cliente" /></SelectTrigger>
-              <SelectContent>{clients.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent>
+              <SelectContent>{(clients || []).map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
