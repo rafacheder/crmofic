@@ -16,7 +16,8 @@ import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { useStore, store } from "@/lib/store";
-import { clientById, vehicleById, vehiclesByClient, type Appointment } from "@/lib/mock-data";
+import { useClients, useVehicles } from "@/hooks/useOrders";
+import { type Appointment } from "@/lib/mock-data";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/appointments")({ component: AppointmentsPage });
@@ -32,6 +33,7 @@ const statusColor: Record<Appointment["status"], string> = {
 
 function AppointmentsPage() {
   const items = useStore((s) => s.appointments);
+  const { data: clients = [] } = useClients();
   const [status, setStatus] = useState("ALL");
   const [open, setOpen] = useState(false);
 
@@ -71,13 +73,12 @@ function AppointmentsPage() {
                   </div>
                 </TableCell></TableRow>
               ) : filtered.map((a) => {
-                const cli = clientById(a.clientId);
-                const veh = vehicleById(a.vehicleId);
+                const cli = clients.find((c: any) => c.id === a.clientId) as any;
                 return (
                   <TableRow key={a.id}>
                     <TableCell>{new Date(a.datetime).toLocaleString("pt-BR")}</TableCell>
-                    <TableCell>{cli?.name}</TableCell>
-                    <TableCell>{veh?.plate} • {veh?.model}</TableCell>
+                    <TableCell>{cli?.nome ?? "—"}</TableCell>
+                    <TableCell>{a.vehicleId}</TableCell>
                     <TableCell>{a.services.join(", ")}</TableCell>
                     <TableCell><Badge variant="secondary" className={statusColor[a.status]}>{a.status}</Badge></TableCell>
                     <TableCell className="flex gap-1">
@@ -101,9 +102,10 @@ function AppointmentsPage() {
 }
 
 function NewAppointmentDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
-  const clients = useStore((s) => s.clients);
+  const { data: clients = [] } = useClients();
   const [clientId, setClientId] = useState("");
   const [vehicleId, setVehicleId] = useState("");
+  const { data: vehicles = [] } = useVehicles(clientId);
   const [datetime, setDatetime] = useState("");
   const [svc, setSvc] = useState("");
   return (
@@ -128,14 +130,14 @@ function NewAppointmentDialog({ open, onOpenChange }: { open: boolean; onOpenCha
             <Label>Cliente</Label>
             <Select value={clientId} onValueChange={(v) => { setClientId(v); setVehicleId(""); }}>
               <SelectTrigger><SelectValue placeholder="Cliente" /></SelectTrigger>
-              <SelectContent>{clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+              <SelectContent>{clients.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
             <Label>Veículo</Label>
             <Select value={vehicleId} onValueChange={setVehicleId} disabled={!clientId}>
               <SelectTrigger><SelectValue placeholder="Veículo" /></SelectTrigger>
-              <SelectContent>{vehiclesByClient(clientId).map((v) => <SelectItem key={v.id} value={v.id}>{v.plate} — {v.model}</SelectItem>)}</SelectContent>
+              <SelectContent>{vehicles.map((v: any) => <SelectItem key={v.id} value={v.id}>{v.placa} — {v.modelo}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="space-y-2"><Label>Data/Hora</Label><Input type="datetime-local" value={datetime} onChange={(e) => setDatetime(e.target.value)} /></div>

@@ -16,7 +16,8 @@ import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { useStore, store } from "@/lib/store";
-import { clientById, vehicleById, type Reminder } from "@/lib/mock-data";
+import { useClients } from "@/hooks/useOrders";
+import { type Reminder } from "@/lib/mock-data";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/reminders")({ component: RemindersPage });
@@ -30,6 +31,7 @@ const statusColor: Record<Reminder["status"], string> = {
 
 function RemindersPage() {
   const items = useStore((s) => s.reminders);
+  const { data: clients = [] } = useClients();
   const [type, setType] = useState("ALL");
   const [status, setStatus] = useState("ALL");
   const [open, setOpen] = useState(false);
@@ -77,13 +79,12 @@ function RemindersPage() {
                   </div>
                 </TableCell></TableRow>
               ) : filtered.map((r) => {
-                const cli = clientById(r.clientId);
-                const veh = r.vehicleId ? vehicleById(r.vehicleId) : null;
+                const cli = clients.find((c: any) => c.id === r.clientId) as any;
                 return (
                   <TableRow key={r.id}>
                     <TableCell>{r.type}</TableCell>
-                    <TableCell>{cli?.name}</TableCell>
-                    <TableCell>{veh?.plate ?? "—"}</TableCell>
+                    <TableCell>{cli?.nome ?? "—"}</TableCell>
+                    <TableCell>{r.vehicleId ?? "—"}</TableCell>
                     <TableCell>{r.channel}</TableCell>
                     <TableCell>{r.scheduledAt ? new Date(r.scheduledAt).toLocaleDateString("pt-BR") : `KM ${r.targetKm?.toLocaleString("pt-BR")}`}</TableCell>
                     <TableCell><Badge variant="secondary" className={statusColor[r.status]}>{r.status}</Badge></TableCell>
@@ -100,7 +101,7 @@ function RemindersPage() {
 }
 
 function NewReminderDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
-  const clients = useStore((s) => s.clients);
+  const { data: clients = [] } = useClients();
   const [form, setForm] = useState<Partial<Reminder>>({ type: "Troca de Óleo", channel: "WhatsApp", status: "PENDENTE" });
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -129,7 +130,7 @@ function NewReminderDialog({ open, onOpenChange }: { open: boolean; onOpenChange
             <Label>Cliente</Label>
             <Select value={form.clientId} onValueChange={(v) => setForm({ ...form, clientId: v })}>
               <SelectTrigger><SelectValue placeholder="Cliente" /></SelectTrigger>
-              <SelectContent>{clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+              <SelectContent>{clients.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
