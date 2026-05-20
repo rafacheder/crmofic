@@ -21,7 +21,7 @@ export function RouteValidator() {
         console.error = (...args) => {
           const msg = args.join(" ");
           if (msg.includes("Failed to fetch dynamically imported module") || msg.includes("does not provide an export named 'Route'")) {
-            setErrors(prev => [...new Set([...prev, "Erro de importação de rota detectado. Verifique se src/routeTree.gen.ts está atualizado.")]);
+            setErrors(prev => [...new Set([...prev, "Erro de importação de rota detectado. Verifique se src/routeTree.gen.ts está atualizado."])]);
           }
           originalError.apply(console, args);
         };
