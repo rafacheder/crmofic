@@ -47,9 +47,11 @@ export function useCatalogo() {
   const createService = useMutation({
     mutationFn: async (service: Partial<CatalogoServico>) => {
       if (!oficinaId) throw new Error("Oficina não identificada");
+      if (!service.nome) throw new Error("Nome é obrigatório");
+      
       const { data, error } = await supabase
         .from("catalogo_servicos")
-        .insert([{ ...service, oficina_id: oficinaId }])
+        .insert([{ ...service, nome: service.nome, oficina_id: oficinaId }])
         .select()
         .single();
       if (error) throw error;
@@ -96,9 +98,11 @@ export function useCatalogo() {
   const createProduct = useMutation({
     mutationFn: async (product: Partial<CatalogoProduto>) => {
       if (!oficinaId) throw new Error("Oficina não identificada");
+      if (!product.nome) throw new Error("Nome é obrigatório");
+
       const { data, error } = await supabase
         .from("catalogo_produtos")
-        .insert([{ ...product, oficina_id: oficinaId }])
+        .insert([{ ...product, nome: product.nome, oficina_id: oficinaId }])
         .select()
         .single();
       if (error) throw error;

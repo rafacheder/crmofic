@@ -60,8 +60,8 @@ function ServicesTab() {
     const payload = {
       nome: form.nome || "",
       categoria: form.categoria || "Geral",
-      preco: Number(form.preco) || 0,
-      tempo_minutos: Number(form.tempo_minutos) || 30,
+      preco_base: Number(form.preco_base) || 0,
+      tempo_estimado: Number(form.tempo_estimado) || 30,
       ativo: form.ativo ?? true,
     };
 
@@ -90,8 +90,8 @@ function ServicesTab() {
               <TableRow key={s.id}>
                 <TableCell className="font-medium">{s.nome}</TableCell>
                 <TableCell>{s.categoria}</TableCell>
-                <TableCell>{formatBRL(s.preco)}</TableCell>
-                <TableCell>{s.tempo_minutos} min</TableCell>
+                <TableCell>{formatBRL(s.preco_base ?? 0)}</TableCell>
+                <TableCell>{s.tempo_estimado} min</TableCell>
                 <TableCell><Badge variant={s.ativo ? "default" : "secondary"}>{s.ativo ? "Ativo" : "Inativo"}</Badge></TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
@@ -116,11 +116,11 @@ function ServicesTab() {
             <div className="space-y-2"><Label>Nome</Label><Input value={form.nome ?? ""} onChange={(e) => setForm({ ...form, nome: e.target.value })} required /></div>
             <div className="space-y-2"><Label>Categoria</Label><Input value={form.categoria ?? ""} onChange={(e) => setForm({ ...form, categoria: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2"><Label>Preço</Label><Input type="number" step="0.01" value={form.preco ?? ""} onChange={(e) => setForm({ ...form, preco: +e.target.value })} /></div>
-              <div className="space-y-2"><Label>Tempo (min)</Label><Input type="number" value={form.tempo_minutos ?? ""} onChange={(e) => setForm({ ...form, tempo_minutos: +e.target.value })} /></div>
+              <div className="space-y-2"><Label>Preço</Label><Input type="number" step="0.01" value={form.preco_base ?? ""} onChange={(e) => setForm({ ...form, preco_base: +e.target.value })} /></div>
+              <div className="space-y-2"><Label>Tempo (min)</Label><Input type="number" value={form.tempo_estimado ?? ""} onChange={(e) => setForm({ ...form, tempo_estimado: +e.target.value })} /></div>
             </div>
             <div className="flex items-center gap-2 pt-2">
-              <input type="checkbox" id="ativo" checked={form.ativo} onChange={(e) => setForm({ ...form, ativo: e.target.checked })} />
+              <input type="checkbox" id="ativo" checked={form.ativo || false} onChange={(e) => setForm({ ...form, ativo: e.target.checked })} />
               <Label htmlFor="ativo">Serviço Ativo</Label>
             </div>
             <DialogFooter><Button type="submit">Salvar</Button></DialogFooter>
@@ -153,8 +153,8 @@ function ProductsTab() {
     const payload = {
       nome: form.nome || "",
       sku: form.sku || "",
-      preco: Number(form.preco) || 0,
-      estoque: Number(form.estoque) || 0,
+      preco_unitario: Number(form.preco_unitario) || 0,
+      estoque_atual: Number(form.estoque_atual) || 0,
       estoque_minimo: Number(form.estoque_minimo) || 0,
       unidade: form.unidade || "un",
     };
@@ -182,10 +182,10 @@ function ProductsTab() {
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.nome}</TableCell>
                 <TableCell className="font-mono text-xs">{p.sku}</TableCell>
-                <TableCell>{formatBRL(p.preco)}</TableCell>
+                <TableCell>{formatBRL(p.preco_unitario ?? 0)}</TableCell>
                 <TableCell>
-                  {p.estoque}
-                  {(p.estoque ?? 0) < (p.estoque_minimo ?? 0) && <Badge variant="secondary" className="ml-2 bg-destructive/15 text-destructive">Estoque Baixo</Badge>}
+                  {p.estoque_atual}
+                  {(p.estoque_atual ?? 0) < (p.estoque_minimo ?? 0) && <Badge variant="secondary" className="ml-2 bg-destructive/15 text-destructive">Estoque Baixo</Badge>}
                 </TableCell>
                 <TableCell>{p.estoque_minimo}</TableCell>
                 <TableCell>{p.unidade}</TableCell>
@@ -210,8 +210,8 @@ function ProductsTab() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2"><Label>SKU</Label><Input value={form.sku ?? ""} onChange={(e) => setForm({ ...form, sku: e.target.value })} /></div>
               <div className="space-y-2"><Label>Unidade</Label><Input placeholder="un" value={form.unidade ?? ""} onChange={(e) => setForm({ ...form, unidade: e.target.value })} /></div>
-              <div className="space-y-2"><Label>Preço</Label><Input type="number" step="0.01" value={form.preco ?? ""} onChange={(e) => setForm({ ...form, preco: +e.target.value })} /></div>
-              <div className="space-y-2"><Label>Estoque Atual</Label><Input type="number" value={form.estoque ?? ""} onChange={(e) => setForm({ ...form, estoque: +e.target.value })} /></div>
+              <div className="space-y-2"><Label>Preço</Label><Input type="number" step="0.01" value={form.preco_unitario ?? ""} onChange={(e) => setForm({ ...form, preco_unitario: +e.target.value })} /></div>
+              <div className="space-y-2"><Label>Estoque Atual</Label><Input type="number" value={form.estoque_atual ?? ""} onChange={(e) => setForm({ ...form, estoque_atual: +e.target.value })} /></div>
               <div className="space-y-2"><Label>Estoque Mínimo</Label><Input type="number" value={form.estoque_minimo ?? ""} onChange={(e) => setForm({ ...form, estoque_minimo: +e.target.value })} /></div>
             </div>
             <DialogFooter><Button type="submit">Salvar</Button></DialogFooter>
