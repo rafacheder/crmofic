@@ -199,6 +199,11 @@ export function OrderSheet({ orderId, onClose }: { orderId: string | null; onClo
             </ol>
           </TabsContent>
         </Tabs>
+        <AddOsItemDialog 
+          osId={orderId} 
+          open={addDialogOpen} 
+          onOpenChange={setAddDialogOpen} 
+        />
       </SheetContent>
     </Sheet>
   );
