@@ -37,7 +37,7 @@ export function OrderSheet({ orderId, onClose }: { orderId: string | null; onClo
 
   const prio = (order.prioridade ?? "NORMAL") as keyof typeof priorityMeta;
   const budgetStatus = (order.status_orcamento ?? "PENDENTE") as keyof typeof budgetMeta;
-  const subTotal = (order.itens ?? []).reduce((acc: number, it: any) => acc + (it.quantidade * it.preco_unitario) - it.desconto, 0);
+  const subTotal = itens.reduce((acc, it) => acc + Number(it.total), 0);
 
   return (
     <Sheet open={!!orderId} onOpenChange={(o) => !o && onClose()}>
