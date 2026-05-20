@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Bell } from "lucide-react";
+import { Plus, Bell, Trash2 } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -15,14 +15,20 @@ import {
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import { useStore, store } from "@/lib/store";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useClientes } from "@/hooks/useClientes";
-import { type Reminder } from "@/lib/mock-data";
+import { useVehicles } from "@/hooks/useVehicles";
+import { useLembretes } from "@/hooks/useLembretes";
+import { Lembrete } from "@/types/database";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/reminders")({ component: RemindersPage });
 
-const statusColor: Record<Reminder["status"], string> = {
+const statusColor: Record<string, string> = {
   PENDENTE: "bg-muted text-muted-foreground",
   ENVIADO: "bg-success/15 text-success",
   FALHOU: "bg-destructive/15 text-destructive",
@@ -30,13 +36,12 @@ const statusColor: Record<Reminder["status"], string> = {
 };
 
 function RemindersPage() {
-  const items = useStore((s) => s.reminders);
-  const { clients } = useClientes();
+  const { reminders, isLoading, deleteLembrete } = useLembretes();
   const [type, setType] = useState("ALL");
   const [status, setStatus] = useState("ALL");
   const [open, setOpen] = useState(false);
 
-  const filtered = items.filter((r) => (type === "ALL" || r.type === type) && (status === "ALL" || r.status === status));
+  const filtered = reminders.filter((r) => (type === "ALL" || r.tipo === type) && (status === "ALL" || r.status === status));
 
   return (
     <>
@@ -54,7 +59,7 @@ function RemindersPage() {
             <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">Todos</SelectItem>
-              {(Object.keys(statusColor) as Reminder["status"][]).map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              {Object.keys(statusColor).map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
             </SelectContent>
           </Select>
           <Button className="ml-auto" onClick={() => setOpen(true)}><Plus className="mr-1 h-4 w-4" /> Novo Lembrete</Button>
@@ -69,28 +74,31 @@ function RemindersPage() {
                 <TableHead>Canal</TableHead>
                 <TableHead>Quando</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="w-10 text-right"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={6}>
+              {isLoading ? (
+                <TableRow><TableCell colSpan={7} className="text-center py-12">Carregando...</TableCell></TableRow>
+              ) : filtered.length === 0 ? (
+                <TableRow><TableCell colSpan={7}>
                   <div className="flex flex-col items-center gap-2 py-12 text-muted-foreground">
                     <Bell className="h-8 w-8" /> Nenhum lembrete
                   </div>
                 </TableCell></TableRow>
-              ) : filtered.map((r) => {
-                const cli = (clients || []).find((c: any) => c.id === r.clientId) as any;
-                return (
-                  <TableRow key={r.id}>
-                    <TableCell>{r.type}</TableCell>
-                    <TableCell>{cli?.nome ?? "—"}</TableCell>
-                    <TableCell>{r.vehicleId ?? "—"}</TableCell>
-                    <TableCell>{r.channel}</TableCell>
-                    <TableCell>{r.scheduledAt ? new Date(r.scheduledAt).toLocaleDateString("pt-BR") : `KM ${r.targetKm?.toLocaleString("pt-BR")}`}</TableCell>
-                    <TableCell><Badge variant="secondary" className={statusColor[r.status]}>{r.status}</Badge></TableCell>
-                  </TableRow>
-                );
-              })}
+              ) : filtered.map((r) => (
+                <TableRow key={r.id}>
+                  <TableCell>{r.tipo}</TableCell>
+                  <TableCell>{r.cliente?.nome ?? "—"}</TableCell>
+                  <TableCell>{r.veiculo_id ?? "—"}</TableCell>
+                  <TableCell>{r.canal}</TableCell>
+                  <TableCell>{r.data_agendada ? new Date(r.data_agendada).toLocaleDateString("pt-BR") : `KM ${r.km_alvo?.toLocaleString("pt-BR")}`}</TableCell>
+                  <TableCell><Badge variant="secondary" className={statusColor[r.status || "PENDENTE"]}>{r.status}</Badge></TableCell>
+                  <TableCell>
+                    <ConfirmDelete onConfirm={() => deleteLembrete(r.id)} />
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </div>
@@ -102,24 +110,43 @@ function RemindersPage() {
 
 function NewReminderDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { clients } = useClientes();
-  const [form, setForm] = useState<Partial<Reminder>>({ type: "Troca de Óleo", channel: "WhatsApp", status: "PENDENTE" });
+  const { createLembrete } = useLembretes();
+  const [clientId, setClientId] = useState("");
+  const [type, setType] = useState("Troca de Óleo");
+  const [channel, setChannel] = useState("WhatsApp");
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [targetKm, setTargetKm] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!clientId) return toast.error("Selecione cliente");
+    
+    await createLembrete({
+      tipo: type,
+      cliente_id: clientId,
+      canal: channel,
+      data_agendada: scheduledAt ? new Date(scheduledAt).toISOString() : null,
+      km_alvo: targetKm ? Number(targetKm) : null,
+      mensagem: message,
+      status: "PENDENTE",
+    });
+    
+    onOpenChange(false);
+    setClientId("");
+    setScheduledAt("");
+    setTargetKm("");
+    setMessage("");
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader><DialogTitle>Novo Lembrete</DialogTitle></DialogHeader>
-        <form className="space-y-3" onSubmit={(e) => {
-          e.preventDefault();
-          if (!form.clientId) return toast.error("Selecione cliente");
-          store.addReminder({
-            id: `r${Date.now()}`, type: form.type as Reminder["type"], clientId: form.clientId,
-            channel: form.channel as Reminder["channel"], scheduledAt: form.scheduledAt,
-            targetKm: form.targetKm, status: "PENDENTE",
-          });
-          toast.success("Lembrete criado"); onOpenChange(false);
-        }}>
+        <form className="space-y-3" onSubmit={handleSubmit}>
           <div className="space-y-2">
             <Label>Tipo</Label>
-            <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v as Reminder["type"] })}>
+            <Select value={type} onValueChange={setType}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {["Troca de Óleo", "Revisão Geral", "Rodízio", "Alinhamento", "Filtro", "Aniversário", "Personalizado"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
@@ -128,14 +155,14 @@ function NewReminderDialog({ open, onOpenChange }: { open: boolean; onOpenChange
           </div>
           <div className="space-y-2">
             <Label>Cliente</Label>
-            <Select value={form.clientId} onValueChange={(v) => setForm({ ...form, clientId: v })}>
+            <Select value={clientId} onValueChange={setClientId}>
               <SelectTrigger><SelectValue placeholder="Cliente" /></SelectTrigger>
               <SelectContent>{(clients || []).map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
             <Label>Canal</Label>
-            <Select value={form.channel} onValueChange={(v) => setForm({ ...form, channel: v as Reminder["channel"] })}>
+            <Select value={channel} onValueChange={setChannel}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="WhatsApp">WhatsApp</SelectItem>
@@ -145,12 +172,25 @@ function NewReminderDialog({ open, onOpenChange }: { open: boolean; onOpenChange
             </Select>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2"><Label>Data agendada</Label><Input type="date" onChange={(e) => setForm({ ...form, scheduledAt: e.target.value ? new Date(e.target.value).toISOString() : undefined })} /></div>
-            <div className="space-y-2"><Label>OU KM alvo</Label><Input type="number" onChange={(e) => setForm({ ...form, targetKm: +e.target.value })} /></div>
+            <div className="space-y-2"><Label>Data agendada</Label><Input type="date" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} /></div>
+            <div className="space-y-2"><Label>OU KM alvo</Label><Input type="number" value={targetKm} onChange={(e) => setTargetKm(e.target.value)} /></div>
           </div>
+          <div className="space-y-2"><Label>Mensagem (opcional)</Label><Input value={message} onChange={(e) => setMessage(e.target.value)} /></div>
           <DialogFooter><Button type="submit">Criar</Button></DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ConfirmDelete({ onConfirm }: { onConfirm: () => void }) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild><Button size="icon" variant="ghost" className="h-7 w-7"><Trash2 className="h-4 w-4 text-destructive" /></Button></AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader><AlertDialogTitle>Confirmar exclusão?</AlertDialogTitle><AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription></AlertDialogHeader>
+        <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={onConfirm}>Excluir</AlertDialogAction></AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
