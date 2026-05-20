@@ -11,7 +11,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { RouteValidator } from "@/components/route-validator";
 import { ChunkErrorHandler } from "@/components/chunk-error-handler";
-import { AppErrorFallback } from "@/components/app-error-fallback";
+
 
 import appCss from "../styles.css?url";
 
