@@ -10,6 +10,8 @@ import {
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { RouteValidator } from "@/components/route-validator";
+
 
 import appCss from "../styles.css?url";
 
@@ -116,7 +118,9 @@ function RootComponent() {
       <AuthProvider>
         <TooltipProvider delayDuration={200}>
           <Outlet />
+          <RouteValidator />
           <Toaster />
+
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>
