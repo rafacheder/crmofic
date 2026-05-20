@@ -312,27 +312,42 @@ export type Database = {
       configuracoes_oficina: {
         Row: {
           created_at: string | null
+          evolution_api_key: string | null
+          evolution_api_url: string | null
+          evolution_instance_name: string | null
           horarios: Json | null
           id: string
           oficina_id: string | null
+          typebot_name: string | null
+          typebot_url: string | null
           whaticket_modo: string | null
           whaticket_token: string | null
           whaticket_url: string | null
         }
         Insert: {
           created_at?: string | null
+          evolution_api_key?: string | null
+          evolution_api_url?: string | null
+          evolution_instance_name?: string | null
           horarios?: Json | null
           id?: string
           oficina_id?: string | null
+          typebot_name?: string | null
+          typebot_url?: string | null
           whaticket_modo?: string | null
           whaticket_token?: string | null
           whaticket_url?: string | null
         }
         Update: {
           created_at?: string | null
+          evolution_api_key?: string | null
+          evolution_api_url?: string | null
+          evolution_instance_name?: string | null
           horarios?: Json | null
           id?: string
           oficina_id?: string | null
+          typebot_name?: string | null
+          typebot_url?: string | null
           whaticket_modo?: string | null
           whaticket_token?: string | null
           whaticket_url?: string | null
