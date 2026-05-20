@@ -18,7 +18,7 @@ export function useUsuariosOficina() {
       const { data, error } = await supabase
         .from("usuarios")
         .select("*")
-        .eq("oficina_id", oficinaId)
+        .eq("oficina_id", oficinaId as string)
         .order("nome");
 
       if (error) throw error;
