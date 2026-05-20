@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { GripVertical, Trash2, Plus } from "lucide-react";
+import { GripVertical, Trash2, Plus, MessageSquare, Bot, Zap } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -18,6 +18,7 @@ import { useStore, store } from "@/lib/store";
 import { toast } from "sonner";
 import { ColumnAutomationsDialog } from "@/components/column-automations-dialog";
 import { type KanbanColumn } from "@/lib/mock-data";
+import { useSettings } from "@/hooks/useSettings";
 
 export const Route = createFileRoute("/_app/settings")({ component: SettingsPage });
 
@@ -31,13 +32,13 @@ function SettingsPage() {
         <TabsList className="flex w-full flex-wrap">
           <TabsTrigger value="general">Geral</TabsTrigger>
           <TabsTrigger value="kanban">Kanban</TabsTrigger>
-          <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
+          <TabsTrigger value="integrations">Integrações</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="users">Usuários</TabsTrigger>
         </TabsList>
         <TabsContent value="general" className="mt-4"><GeneralTab /></TabsContent>
         <TabsContent value="kanban" className="mt-4"><KanbanTab /></TabsContent>
-        <TabsContent value="whatsapp" className="mt-4"><WhatsappTab /></TabsContent>
+        <TabsContent value="integrations" className="mt-4"><IntegrationsTab /></TabsContent>
         <TabsContent value="templates" className="mt-4"><TemplatesTab /></TabsContent>
         <TabsContent value="users" className="mt-4"><UsersTab /></TabsContent>
       </Tabs>
@@ -45,124 +46,127 @@ function SettingsPage() {
   );
 }
 
-function GeneralTab() {
+// ... keep existing code (GeneralTab, KanbanTab)
+
+function IntegrationsTab() {
+  const { settings, updateSettings, isUpdating } = useSettings();
+  const [evolution, setEvolution] = useState({
+    url: "",
+    key: "",
+    instance: ""
+  });
+  const [typebot, setTypebot] = useState({
+    url: "",
+    name: ""
+  });
+
+  useEffect(() => {
+    if (settings) {
+      setEvolution({
+        url: settings.evolution_api_url || "",
+        key: settings.evolution_api_key || "",
+        instance: settings.evolution_instance_name || ""
+      });
+      setTypebot({
+        url: settings.typebot_url || "",
+        name: settings.typebot_name || ""
+      });
+    }
+  }, [settings]);
+
+  const handleSaveEvolution = async () => {
+    await updateSettings({
+      evolution_api_url: evolution.url,
+      evolution_api_key: evolution.key,
+      evolution_instance_name: evolution.instance
+    });
+  };
+
+  const handleSaveTypebot = async () => {
+    await updateSettings({
+      typebot_url: typebot.url,
+      typebot_name: typebot.name
+    });
+  };
+
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <Card>
-        <CardHeader><CardTitle>Dados da Oficina</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-2"><Label>Nome</Label><Input defaultValue="Auto Center Silva" /></div>
-          <div className="space-y-2"><Label>CNPJ</Label><Input defaultValue="12.345.678/0001-90" /></div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2"><Label>Telefone</Label><Input defaultValue="(11) 4444-5555" /></div>
-            <div className="space-y-2"><Label>Email</Label><Input defaultValue="contato@oficina.com" /></div>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-primary" />
+            <CardTitle>Evolution API</CardTitle>
           </div>
-          <div className="space-y-2"><Label>Endereço</Label><Input defaultValue="Av. Paulista, 1000" /></div>
-          <div className="space-y-2"><Label>Logo</Label><Input type="file" /></div>
-          <Button onClick={() => toast.success("Salvo")}>Salvar</Button>
+          <CardDescription>Configure o Evolution API para disparar automações via WhatsApp.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>URL da API</Label>
+            <Input 
+              value={evolution.url} 
+              onChange={(e) => setEvolution({ ...evolution, url: e.target.value })} 
+              placeholder="https://api.evolution.com" 
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>API Key</Label>
+            <Input 
+              value={evolution.key} 
+              onChange={(e) => setEvolution({ ...evolution, key: e.target.value })} 
+              type="password" 
+              placeholder="apikey" 
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Nome da Instância</Label>
+            <Input 
+              value={evolution.instance} 
+              onChange={(e) => setEvolution({ ...evolution, instance: e.target.value })} 
+              placeholder="oficina_01" 
+            />
+          </div>
+          <Button onClick={handleSaveEvolution} disabled={isUpdating}>
+            {isUpdating ? "Salvando..." : "Salvar Configurações"}
+          </Button>
         </CardContent>
       </Card>
+
       <Card>
-        <CardHeader><CardTitle>Horários de Funcionamento</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
-          {days.map((d) => (
-            <div key={d} className="flex items-center gap-3">
-              <Switch defaultChecked={d !== "Dom"} />
-              <span className="w-12 text-sm font-medium">{d}</span>
-              <Input className="flex-1" defaultValue="08:00" />
-              <span>—</span>
-              <Input className="flex-1" defaultValue="18:00" />
-            </div>
-          ))}
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Bot className="h-5 w-5 text-primary" />
+            <CardTitle>Typebot</CardTitle>
+          </div>
+          <CardDescription>Configure o Typebot para criar fluxos de autoatendimento.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>URL do Servidor</Label>
+            <Input 
+              value={typebot.url} 
+              onChange={(e) => setTypebot({ ...typebot, url: e.target.value })} 
+              placeholder="https://typebot.io" 
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Nome do Bot (Slug)</Label>
+            <Input 
+              value={typebot.name} 
+              onChange={(e) => setTypebot({ ...typebot, name: e.target.value })} 
+              placeholder="atendimento-oficina" 
+            />
+          </div>
+          <Button onClick={handleSaveTypebot} disabled={isUpdating}>
+            {isUpdating ? "Salvando..." : "Salvar Configurações"}
+          </Button>
         </CardContent>
       </Card>
     </div>
   );
 }
 
-function KanbanTab() {
-  const cols = useStore((s) => s.columns);
-  const [selectedCol, setSelectedCol] = useState<KanbanColumn | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Colunas do Kanban</CardTitle>
-            <CardDescription>Reordene, edite ou adicione colunas e automações.</CardDescription>
-          </div>
-          <Button size="sm">
-            <Plus className="mr-1 h-4 w-4" /> Adicionar coluna
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {cols.map((c) => (
-          <div key={c.id} className="flex items-center gap-3 rounded-md border bg-card p-3">
-            <GripVertical className="h-4 w-4 text-muted-foreground" />
-            <span className="h-2.5 w-2.5 rounded-full" style={{ background: c.color }} />
-            <span className="flex-1 text-sm font-medium">{c.name}</span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setSelectedCol(c);
-                setDialogOpen(true);
-              }}
-            >
-              Automações
-              {c.automations && c.automations.length > 0 && (
-                <Badge variant="secondary" className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px]">
-                  {c.automations.length}
-                </Badge>
-              )}
-            </Button>
-            <Button variant="outline" size="sm">
-              Editar
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
-          </div>
-        ))}
-      </CardContent>
-
-      <ColumnAutomationsDialog
-        column={selectedCol}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-      />
-    </Card>
-  );
-}
-
-function WhatsappTab() {
-  const url = useStore((s) => s.whaticketUrl);
-  const [val, setVal] = useState(url);
-  const [token, setToken] = useState("");
-  const [iframe, setIframe] = useState(true);
-  return (
-    <Card className="max-w-2xl">
-      <CardHeader><CardTitle>Whaticket</CardTitle><CardDescription>Configure a integração com seu Whaticket.</CardDescription></CardHeader>
-      <CardContent className="space-y-3">
-        <div className="space-y-2"><Label>URL do Whaticket</Label><Input value={val} onChange={(e) => setVal(e.target.value)} placeholder="http://localhost:3333" /></div>
-        <div className="space-y-2"><Label>Token de acesso (opcional)</Label><Input value={token} onChange={(e) => setToken(e.target.value)} type="password" /></div>
-        <div className="flex items-center justify-between rounded-md border p-3">
-          <div><Label>Abrir em iframe dentro do sistema</Label><p className="text-xs text-muted-foreground">Desative para abrir sempre em nova aba.</p></div>
-          <Switch checked={iframe} onCheckedChange={setIframe} />
-        </div>
-        <Button onClick={() => {
-          store.set({ whaticketUrl: val, whaticketConnected: !!val });
-          toast.success(val ? "Conexão configurada com sucesso" : "URL removida");
-        }}>Salvar e Testar Conexão</Button>
-      </CardContent>
-    </Card>
-  );
-}
-
 function TemplatesTab() {
+...
   const templates = [
     { id: 1, name: "Boas-vindas", channel: "WhatsApp", preview: "Olá {{clienteName}}, recebemos seu veículo..." },
     { id: 2, name: "Orçamento aprovado", channel: "WhatsApp", preview: "Seu orçamento de {{valorTotal}} foi aprovado..." },
