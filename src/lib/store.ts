@@ -1,16 +1,10 @@
-// Simple in-memory reactive store for demo purposes
+// Simple in-memory reactive store for remaining UI state
 import { useSyncExternalStore } from "react";
 import {
-  orders as initialOrders,
-  clients as initialClients,
-  vehicles as initialVehicles,
   appointments as initialAppointments,
   reminders as initialReminders,
   services as initialServices,
   products as initialProducts,
-  type Order,
-  type Client,
-  type Vehicle,
   type Appointment,
   type Reminder,
   type CatalogService,
@@ -21,9 +15,6 @@ import {
 } from "./mock-data";
 
 interface State {
-  orders: Order[];
-  clients: Client[];
-  vehicles: Vehicle[];
   appointments: Appointment[];
   reminders: Reminder[];
   services: CatalogService[];
@@ -34,9 +25,6 @@ interface State {
 }
 
 let state: State = {
-  orders: initialOrders,
-  clients: initialClients,
-  vehicles: initialVehicles,
   appointments: initialAppointments,
   reminders: initialReminders,
   services: initialServices,
@@ -59,36 +47,13 @@ export const store = {
     state = { ...state, ...partial };
     emit();
   },
-  moveOrder: (orderId: string, column: ColumnId) => {
-    state = {
-      ...state,
-      orders: state.orders.map((o) =>
-        o.id === orderId
-          ? {
-              ...o,
-              column,
-              enteredColumnAt: new Date().toISOString(),
-              history: [...o.history, { from: o.column, to: column, by: "Você", at: new Date().toISOString() }],
-            }
-          : o
-      ),
-    };
+  addClient: (c: any) => {
+    // Clients now handled by Supabase, but keeping stub for UI consistency if needed
+    console.warn("addClient is deprecated. Use database directly.");
     emit();
   },
-  addOrder: (o: Order) => {
-    state = { ...state, orders: [o, ...state.orders] };
-    emit();
-  },
-  updateOrder: (id: string, patch: Partial<Order>) => {
-    state = { ...state, orders: state.orders.map((o) => (o.id === id ? { ...o, ...patch } : o)) };
-    emit();
-  },
-  addClient: (c: Client) => {
-    state = { ...state, clients: [c, ...state.clients] };
-    emit();
-  },
-  addVehicle: (v: Vehicle) => {
-    state = { ...state, vehicles: [v, ...state.vehicles] };
+  addVehicle: (v: any) => {
+    console.warn("addVehicle is deprecated. Use database directly.");
     emit();
   },
   addAppointment: (a: Appointment) => {
