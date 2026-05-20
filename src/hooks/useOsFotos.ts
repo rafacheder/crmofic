@@ -15,7 +15,7 @@ export function useOsFotos(osId: string | null) {
       const { data, error } = await supabase
         .from("os_fotos")
         .select("*")
-        .eq("os_id", osId)
+        .eq("os_id", osId as string)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
