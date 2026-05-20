@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { OrdemServico, OsItem, OsHistorico } from "@/types/database";
+import { OrdemServico, OsItem, OsHistorico, OsFoto } from "@/types/database";
 import { toast } from "sonner";
 
 export function usePublicOrder(token: string) {
