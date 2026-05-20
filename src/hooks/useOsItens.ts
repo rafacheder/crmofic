@@ -13,7 +13,7 @@ export function useOsItens(osId: string | null) {
       const { data, error } = await supabase
         .from("os_itens")
         .select("*")
-        .eq("os_id", osId)
+        .eq("os_id", osId as string)
         .order("created_at", { ascending: true });
 
       if (error) throw error;
