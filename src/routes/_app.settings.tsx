@@ -14,11 +14,19 @@ import {
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
 import { useStore, store } from "@/lib/store";
 import { toast } from "sonner";
 import { ColumnAutomationsDialog } from "@/components/column-automations-dialog";
 import { type KanbanColumn } from "@/lib/mock-data";
 import { useSettings } from "@/hooks/useSettings";
+import { useUsuariosOficina } from "@/hooks/useUsuariosOficina";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Route = createFileRoute("/_app/settings")({ component: SettingsPage });
 
