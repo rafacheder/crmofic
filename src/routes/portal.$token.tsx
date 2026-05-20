@@ -106,6 +106,21 @@ function PortalPage() {
               )}
             </ul>
           </CardContent>
+        <Card>
+          <CardContent className="pt-6 space-y-4">
+            <h3 className="text-sm font-semibold">Fotos do veículo</h3>
+            {order.fotos?.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic">Nenhuma foto anexada.</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {order.fotos?.map((f) => (
+                  <div key={f.id} className="aspect-square rounded-md overflow-hidden border">
+                    <img src={f.url} alt="Foto da OS" className="w-full h-full object-cover cursor-pointer hover:opacity-90" onClick={() => window.open(f.url, '_blank')} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
         </Card>
       </main>
     </div>
