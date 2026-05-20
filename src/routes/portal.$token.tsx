@@ -1,39 +1,67 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Wrench, Check, Circle } from "lucide-react";
+import { Wrench, Check, Circle, Loader2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { orders, clientById, vehicleById, KANBAN_COLUMNS } from "@/lib/mock-data";
+import { usePublicOrder } from "@/hooks/usePublicOrder";
+import { useKanban } from "@/hooks/useKanban";
 
 export const Route = createFileRoute("/portal/$token")({ component: PortalPage });
 
 function PortalPage() {
   const { token } = Route.useParams();
-  const order = orders.find((o) => o.id === token) ?? orders[0];
-  const cli = clientById(order.clientId);
-  const veh = vehicleById(order.vehicleId);
-  const stages = [
-    { id: "recepcao", label: "Recebido" },
-    { id: "diagnostico", label: "Diagnóstico" },
-    { id: "aprovacao", label: "Aprovação" },
-    { id: "execucao", label: "Em Execução" },
-    { id: "pronto", label: "Pronto" },
-    { id: "entregue", label: "Entregue" },
-  ];
-  const currentIdx = stages.findIndex((s) => s.id === order.column);
+  const { order, isLoading, error } = usePublicOrder(token);
+  const { columns } = useKanban();
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-muted/30">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error || !order) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4 text-center">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6">
+            <X className="mx-auto h-12 w-12 text-destructive mb-4" />
+            <h2 className="text-xl font-bold mb-2">Página não encontrada</h2>
+            <p className="text-muted-foreground">O link pode ter expirado ou estar incorreto.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const cli = order.cliente;
+  const veh = order.veiculo;
+  const items = order.itens || [];
+  const currentColumn = columns.find(c => c.id === order.coluna_id);
+
+  // Mapeamento visual das etapas baseado na ordem das colunas no Kanban real
+  const stages = columns.sort((a, b) => a.ordem - b.ordem).map(c => ({
+    id: c.id,
+    label: c.nome
+  }));
+  
+  const currentIdx = stages.findIndex((s) => s.id === order.coluna_id);
 
   return (
     <div className="min-h-screen bg-muted/30">
       <header className="border-b bg-background">
         <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary"><Wrench className="h-5 w-5 text-primary-foreground" /></div>
-          <div><div className="text-sm font-semibold">Auto Center Silva</div><div className="text-xs text-muted-foreground">Acompanhe seu serviço</div></div>
+          <div><div className="text-sm font-semibold">Oficina</div><div className="text-xs text-muted-foreground">Acompanhe seu serviço</div></div>
         </div>
       </header>
       <main className="mx-auto max-w-3xl space-y-4 p-4">
         <Card>
           <CardContent className="pt-6">
-            <div className="text-xs text-muted-foreground">Olá {cli?.name}, status atual:</div>
-            <Badge className="mt-2 bg-primary px-4 py-2 text-base">{KANBAN_COLUMNS.find((c) => c.id === order.column)?.name}</Badge>
+            <div className="text-xs text-muted-foreground">Olá {cli?.nome}, status atual:</div>
+            <Badge className="mt-2 bg-primary px-4 py-2 text-base">
+              {currentColumn?.nome || "Em processamento"}
+            </Badge>
           </CardContent>
         </Card>
 
@@ -59,7 +87,11 @@ function PortalPage() {
         <Card>
           <CardContent className="pt-6 space-y-2">
             <h3 className="text-sm font-semibold">Veículo</h3>
-            <p className="text-sm">{veh?.brand} {veh?.model} • Placa {veh?.plate}</p>
+            {veh ? (
+              <p className="text-sm">{veh.marca} {veh.modelo} • Placa {veh.placa}</p>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">Veículo não identificado</p>
+            )}
           </CardContent>
         </Card>
 
@@ -67,7 +99,11 @@ function PortalPage() {
           <CardContent className="pt-6 space-y-2">
             <h3 className="text-sm font-semibold">O que será feito</h3>
             <ul className="list-disc space-y-1 pl-5 text-sm">
-              {order.items.filter((i) => i.type === "service").map((i) => <li key={i.id}>{i.name}</li>)}
+              {items.filter((i) => i.tipo === "servico").length === 0 ? (
+                <li className="text-muted-foreground italic">Aguardando diagnóstico</li>
+              ) : (
+                items.filter((i) => i.tipo === "servico").map((i) => <li key={it.id}>{it.nome}</li>)
+              )}
             </ul>
           </CardContent>
         </Card>
