@@ -16,11 +16,13 @@ import {
 import { toast } from "sonner";
 import { useOrder } from "@/hooks/useOrder";
 import { useKanban } from "@/hooks/useKanban";
+import { useOsItens } from "@/hooks/useOsItens";
+import { AddOsItemDialog } from "@/components/add-os-item-dialog";
 import {
   priorityMeta, budgetMeta,
   formatBRL, initials, timeSince,
 } from "@/lib/mock-data";
-import { Send, ImagePlus, Plus } from "lucide-react";
+import { Send, ImagePlus, Plus, Trash2 } from "lucide-react";
 
 export function OrderSheet({ orderId, onClose }: { orderId: string | null; onClose: () => void }) {
   const { order, isLoading, updateOrder, moveOrder } = useOrder(orderId);
