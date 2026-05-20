@@ -58,7 +58,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
-  errorComponent: AppErrorFallback,
+  errorComponent: (props) => <AppErrorFallback {...props} />,
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {
