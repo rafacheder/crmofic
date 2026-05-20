@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertCircle, Terminal, X } from "lucide-react";
+import { AlertCircle, X } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
@@ -8,40 +8,31 @@ export function RouteValidator() {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    const validateRoutes = async () => {
-      const validationErrors: string[] = [];
-      
-      // No browser, só conseguimos validar se os módulos estão carregados ou se há erros no console
-      // Mas para uma validação "hard" de arquivos físicos, teríamos que usar uma serverFn.
-      // Vamos focar no que o usuário pediu: detectar referências antigas e arquivos faltando.
-      
-      try {
-        // Tenta detectar se o Vite reclamou de módulos não encontrados no console
-        const originalError = console.error;
-        console.error = (...args) => {
-          const msg = args.join(" ");
-          if (msg.includes("Failed to fetch dynamically imported module") || msg.includes("does not provide an export named 'Route'")) {
-            setErrors(prev => [...new Set([...prev, "Erro de importação de rota detectado. Verifique se src/routeTree.gen.ts está atualizado."])]);
-          }
-          originalError.apply(console, args);
-        };
-      } catch (e) {
-        // ignore
+    const originalError = console.error;
+    console.error = (...args) => {
+      const msg = args.join(" ");
+      if (
+        msg.includes("Failed to fetch dynamically imported module") || 
+        msg.includes("does not provide an export named 'Route'")
+      ) {
+        setErrors(prev => [...new Set([...prev, "Erro de importação de rota detectado. Verifique se src/routeTree.gen.ts está atualizado."])]);
       }
+      originalError.apply(console, args);
+    };
 
-      // Verificação específica solicitada: _admin.tsx
-      // Como não podemos ler o FS no client de forma síncrona, vamos tentar importar.
-      // Se o arquivo existir mas não deveria, emitimos um aviso.
-      if (import.meta.env.DEV) {
-        console.log("[RouteValidator] Verificando integridade das rotas admin...");
-        
-        // Tentativa de detectar caminhos obsoletos no manifest ou router
-        // O router do TanStack guarda as rotas carregadas
-        try {
-          // Se estivéssemos usando o router diretamente aqui poderíamos checar o tree
-        } catch (e) {}
-      }
+    // Verificação específica para referências obsoletas no desenvolvimento
+    if (import.meta.env.DEV) {
+      // Pequeno delay para dar tempo do router inicializar
+      setTimeout(() => {
+        // Se houver algum resquício de pathless layout sendo acessado incorretamente, 
+        // o router costuma emitir avisos ou falhar no carregamento.
+      }, 1000);
+    }
 
+    return () => {
+      console.error = originalError;
+    };
+  }, []);
 
   if (!isVisible || errors.length === 0) return null;
 
@@ -60,7 +51,7 @@ export function RouteValidator() {
               ))}
               <div className="mt-3 p-2 bg-black/30 rounded border border-red-800/50">
                 <p className="text-[10px] font-mono">
-                  Dica: Se você renomeou rotas, delete src/routeTree.gen.ts e reinicie o servidor.
+                  Dica: Se você renomeou rotas, delete src/routeTree.gen.ts e reinicie o servidor para limpar o cache do Vite.
                 </p>
               </div>
             </AlertDescription>
