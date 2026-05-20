@@ -1,13 +1,15 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdmin } from "@/hooks/useAdmin";
 import { toast } from "sonner";
 import {
   Wrench, Kanban, FileText, Users, Calendar, Bell,
   MessageSquare, Package, Settings, LogOut, User,
+  LayoutDashboard, Building2, CreditCard
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
-  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader,
+  SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader,
   SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -27,12 +29,19 @@ const items = [
   { title: "Configurações", url: "/settings", icon: Settings },
 ];
 
+const adminItems = [
+  { title: "Admin Dashboard", url: "/admin", icon: LayoutDashboard, exact: true },
+  { title: "Oficinas", url: "/admin/oficinas", icon: Building2 },
+  { title: "Planos", url: "/admin/planos", icon: CreditCard },
+];
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const path = useRouterState({ select: (r) => r.location.pathname });
   const navigate = useNavigate();
   const { signOut } = useAuth();
+  const { isSuperAdmin } = useAdmin();
 
   const handleSignOut = async () => {
     try {
@@ -80,6 +89,31 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {isSuperAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Administração</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminItems.map((item) => {
+                  const active = item.exact 
+                    ? path === item.url 
+                    : path.startsWith(item.url);
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
+                        <Link to={item.url}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">
