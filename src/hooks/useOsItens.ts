@@ -22,8 +22,8 @@ export function useOsItens(osId: string | null) {
   });
 
   const recalculateTotal = async (id: string) => {
-    // Busca todos os itens atuais para somar
-    const { data: itens, error: fetchError } = await supabase
+      if (!osId) return;
+      const { data: itens, error: fetchError } = await supabase
       .from("os_itens")
       .select("total")
       .eq("os_id", id);

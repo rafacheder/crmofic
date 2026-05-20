@@ -9,6 +9,7 @@ import { useCatalogo } from "@/hooks/useCatalogo";
 import { useOsItens } from "@/hooks/useOsItens";
 import { Loader2 } from "lucide-react";
 import { formatBRL } from "@/lib/mock-data";
+import { CatalogoServico, CatalogoProduto } from "@/types/database";
 
 export function AddOsItemDialog({ 
   osId, 
@@ -19,7 +20,7 @@ export function AddOsItemDialog({
   open: boolean; 
   onOpenChange: (open: boolean) => void;
 }) {
-  const { servicos, produtos } = useCatalogo();
+  const { services, products } = useCatalogo();
   const { addItem, isAdding } = useOsItens(osId);
   
   const [tipo, setTipo] = useState<"servico" | "produto">("servico");
@@ -52,13 +53,13 @@ export function AddOsItemDialog({
 
   const handleSelectItem = (id: string) => {
     if (tipo === "servico") {
-      const s = servicos.find(x => x.id === id);
+      const s = services.find((x: CatalogoServico) => x.id === id);
       if (s) {
         setNome(s.nome);
         setPreco(s.preco_base || 0);
       }
     } else {
-      const p = produtos.find(x => x.id === id);
+      const p = products.find((x: CatalogoProduto) => x.id === id);
       if (p) {
         setNome(p.nome);
         setPreco(p.preco_unitario || 0);
@@ -88,8 +89,8 @@ export function AddOsItemDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {tipo === "servico" 
-                    ? servicos.map(s => <SelectItem key={s.id} value={s.id}>{s.nome} ({formatBRL(s.preco_base || 0)})</SelectItem>)
-                    : produtos.map(p => <SelectItem key={p.id} value={p.id}>{p.nome} ({formatBRL(p.preco_unitario || 0)})</SelectItem>)
+                    ? services.map((s: CatalogoServico) => <SelectItem key={s.id} value={s.id}>{s.nome} ({formatBRL(s.preco_base || 0)})</SelectItem>)
+                    : products.map((p: CatalogoProduto) => <SelectItem key={p.id} value={p.id}>{p.nome} ({formatBRL(p.preco_unitario || 0)})</SelectItem>)
                   }
                 </SelectContent>
               </Select>
