@@ -3,20 +3,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Agendamento } from "@/types/database";
 
+const APPOINTMENTS_KEY = ["agendamentos"];
+
 export function useAgendamentos() {
   const { oficinaId } = useAuth();
 
   const query = useQuery({
-    queryKey: ["agendamentos", oficinaId],
+    queryKey: [...APPOINTMENTS_KEY, oficinaId],
     enabled: !!oficinaId,
+    staleTime: 1000 * 60 * 5,
     queryFn: async () => {
       if (!oficinaId) return [];
       const { data, error } = await supabase
         .from("agendamentos")
         .select(`
-          *,
-          cliente:clientes(*),
-          veiculo:veiculos(*)
+          id,
+          data_hora,
+          status,
+          descricao,
+          cliente:clientes(id, nome),
+          veiculo:veiculos(id, placa, marca, modelo)
         `)
         .eq("oficina_id", oficinaId)
         .order("data_hora", { ascending: true });

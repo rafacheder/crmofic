@@ -4,26 +4,34 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Cliente } from "@/types/database";
 import { toast } from "sonner";
 
+const CLIENTS_KEY = ["clientes"];
+
 export function useClientes() {
   const { oficinaId } = useAuth();
   const queryClient = useQueryClient();
 
   const clientesQuery = useQuery({
-    queryKey: ["clientes", oficinaId],
+    queryKey: [...CLIENTS_KEY, oficinaId],
     enabled: !!oficinaId,
+    staleTime: 1000 * 60 * 10, // 10 minutes
     queryFn: async () => {
       if (!oficinaId) return [];
       const { data, error } = await supabase
         .from("clientes")
         .select(`
-          *,
+          id,
+          nome,
+          telefone,
+          email,
+          cpf_cnpj,
+          endereco,
           veiculos(count),
           ordens_servico(count)
         `)
         .eq("oficina_id", oficinaId)
         .order("nome");
       if (error) throw error;
-      return (data ?? []) as unknown as (Cliente & { veiculos: { count: number }[]; ordens_servico: { count: number }[] })[];
+      return (data ?? []) as unknown as (Cliente & { veiculos: [{ count: number }]; ordens_servico: [{ count: number }] })[];
     },
   });
 
@@ -50,7 +58,7 @@ export function useClientes() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["clientes"] });
+      queryClient.invalidateQueries({ queryKey: CLIENTS_KEY });
       toast.success("Cliente cadastrado");
     },
     onError: (error: Error) => {

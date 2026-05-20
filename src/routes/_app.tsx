@@ -1,7 +1,9 @@
+import React, { Suspense } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { PrivateRoute } from "@/components/PrivateRoute";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -13,7 +15,9 @@ function AppLayout() {
       <div className="flex min-h-screen w-full bg-background">
         <AppSidebar />
         <div className="flex min-w-0 flex-1 flex-col">
-          <PrivateRoute />
+          <Suspense fallback={<div className="p-8 space-y-4"><Skeleton className="h-8 w-1/3" /><Skeleton className="h-[400px] w-full" /></div>}>
+            <PrivateRoute />
+          </Suspense>
         </div>
       </div>
     </SidebarProvider>

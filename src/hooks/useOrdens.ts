@@ -4,21 +4,34 @@ import { useAuth } from "@/contexts/AuthContext";
 import { OrdemServico } from "@/types/database";
 import { toast } from "sonner";
 
+const ORDERS_KEY = ["ordens_servico"];
+
 export function useOrdens() {
   const { oficinaId } = useAuth();
   const queryClient = useQueryClient();
 
   const ordensQuery = useQuery({
-    queryKey: ["ordens_servico", oficinaId],
+    queryKey: [...ORDERS_KEY, oficinaId],
     enabled: !!oficinaId,
+    staleTime: 1000 * 60 * 5,
     queryFn: async () => {
       if (!oficinaId) return [];
       const { data, error } = await supabase
         .from("ordens_servico")
         .select(`
-          *,
-          cliente:clientes(*),
-          veiculo:veiculos(*)
+          id,
+          numero,
+          cliente_id,
+          veiculo_id,
+          coluna_id,
+          prioridade,
+          status_orcamento,
+          valor_total,
+          created_at,
+          km_entrada,
+          data_agendada,
+          cliente:clientes(id, nome),
+          veiculo:veiculos(id, placa, marca, modelo)
         `)
         .eq("oficina_id", oficinaId)
         .order("created_at", { ascending: false });
@@ -34,9 +47,10 @@ export function useOrdens() {
         throw new Error("Cliente e veículo são obrigatórios");
       }
 
+      // Using RPC for atomic number generation if possible, but keeping current logic with optimization
       const { count, error: countErr } = await supabase
         .from("ordens_servico")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("oficina_id", oficinaId);
       if (countErr) throw countErr;
 
@@ -67,7 +81,7 @@ export function useOrdens() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ordens_servico"] });
+      queryClient.invalidateQueries({ queryKey: ORDERS_KEY });
       queryClient.invalidateQueries({ queryKey: ["kanban_ordens"] });
       toast.success("Ordem de serviço criada");
     },
