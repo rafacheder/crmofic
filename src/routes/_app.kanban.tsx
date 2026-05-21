@@ -102,7 +102,7 @@ function KanbanPage() {
       </div>
 
       <div className="flex flex-1 gap-3 overflow-x-auto p-4">
-        {columns.length > 0 ? useMemo(() => columns.map((col) => {
+        {columns.length > 0 ? columns.map((col) => {
           const cards = filtered.filter((o) => o.coluna_id === col.id);
           return (
             <div
@@ -142,7 +142,7 @@ function KanbanPage() {
               </div>
             </div>
           );
-        }), [columns, filtered, dragOver, newOpen, openId]) : (
+        }) : (
           <div className="flex h-64 w-full items-center justify-center rounded-lg border border-dashed text-muted-foreground">
             Nenhuma coluna de Kanban configurada para esta oficina.
           </div>
