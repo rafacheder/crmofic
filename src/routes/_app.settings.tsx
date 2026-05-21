@@ -56,7 +56,7 @@ function SettingsPage() {
     <>
       <AppHeader title="Configurações" />
       <Tabs defaultValue="general" className="p-4">
-        <TabsList className="flex w-full flex-wrap">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
           <TabsTrigger value="general">Geral</TabsTrigger>
           <TabsTrigger value="kanban">Kanban</TabsTrigger>
           <TabsTrigger value="integrations">Integrações</TabsTrigger>
