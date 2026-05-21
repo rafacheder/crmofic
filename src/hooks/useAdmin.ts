@@ -229,6 +229,82 @@ export function useAdmin() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Criar oficina (com dono e senha)
+  const criarOficina = useMutation({
+    mutationFn: async (payload: {
+      nome: string;
+      email?: string;
+      telefone?: string;
+      cnpj?: string;
+      endereco?: string;
+      plano_id?: string;
+      status?: string;
+      dono_nome: string;
+      dono_email: string;
+      dono_senha: string;
+    }) => {
+      const { error } = await supabase.rpc("admin_criar_oficina", {
+        p_nome: payload.nome,
+        p_email: payload.email ?? undefined,
+        p_telefone: payload.telefone ?? undefined,
+        p_cnpj: payload.cnpj ?? undefined,
+        p_endereco: payload.endereco ?? undefined,
+        p_plano_id: payload.plano_id ?? undefined,
+        p_status: payload.status ?? "trial",
+        p_dono_nome: payload.dono_nome,
+        p_dono_email: payload.dono_email,
+        p_dono_senha: payload.dono_senha,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin_oficinas"] });
+      toast.success("Oficina criada com sucesso");
+    },
+    onError: (e: Error) => toast.error("Erro ao criar oficina: " + e.message),
+  });
+
+  // Editar oficina (dados + dono)
+  const editarOficina = useMutation({
+    mutationFn: async (payload: {
+      oficina_id: string;
+      nome?: string;
+      email?: string;
+      telefone?: string;
+      cnpj?: string;
+      endereco?: string;
+      plano_id?: string;
+      status?: string;
+      trial_ate?: string;
+      dono_user_id?: string;
+      dono_nome?: string;
+      dono_email?: string;
+      dono_senha?: string;
+    }) => {
+      const { error } = await supabase.rpc("admin_editar_oficina", {
+        p_oficina_id: payload.oficina_id,
+        p_nome: payload.nome ?? undefined,
+        p_email: payload.email ?? undefined,
+        p_telefone: payload.telefone ?? undefined,
+        p_cnpj: payload.cnpj ?? undefined,
+        p_endereco: payload.endereco ?? undefined,
+        p_plano_id: payload.plano_id ?? undefined,
+        p_status: payload.status ?? undefined,
+        p_trial_ate: payload.trial_ate ?? undefined,
+        p_dono_user_id: payload.dono_user_id ?? undefined,
+        p_dono_nome: payload.dono_nome ?? undefined,
+        p_dono_email: payload.dono_email ?? undefined,
+        p_dono_senha: payload.dono_senha ?? undefined,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin_oficinas"] });
+      toast.success("Oficina atualizada");
+    },
+    onError: (e: Error) => toast.error("Erro ao editar oficina: " + e.message),
+  });
+
   // Excluir oficina (todos os dados)
   const excluirOficina = useMutation({
     mutationFn: async (oficina_id: string) => {
