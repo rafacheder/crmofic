@@ -8,14 +8,20 @@ export type OficinaAdmin = {
   nome: string;
   email: string | null;
   telefone: string | null;
+  cnpj: string | null;
+  endereco: string | null;
   status: string;
   trial_ate: string | null;
+  plano_id: string | null;
   plano_nome: string | null;
   plano_preco: number | null;
   total_usuarios: number;
   total_ordens: number;
   ultima_atividade: string | null;
   created_at: string;
+  dono_id: string | null;
+  dono_nome: string | null;
+  dono_email: string | null;
 };
 
 export type Plano = {
@@ -223,6 +229,82 @@ export function useAdmin() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Criar oficina (com dono e senha)
+  const criarOficina = useMutation({
+    mutationFn: async (payload: {
+      nome: string;
+      email?: string;
+      telefone?: string;
+      cnpj?: string;
+      endereco?: string;
+      plano_id?: string;
+      status?: string;
+      dono_nome: string;
+      dono_email: string;
+      dono_senha: string;
+    }) => {
+      const { error } = await supabase.rpc("admin_criar_oficina", {
+        p_nome: payload.nome,
+        p_email: payload.email ?? undefined,
+        p_telefone: payload.telefone ?? undefined,
+        p_cnpj: payload.cnpj ?? undefined,
+        p_endereco: payload.endereco ?? undefined,
+        p_plano_id: payload.plano_id ?? undefined,
+        p_status: payload.status ?? "trial",
+        p_dono_nome: payload.dono_nome,
+        p_dono_email: payload.dono_email,
+        p_dono_senha: payload.dono_senha,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin_oficinas"] });
+      toast.success("Oficina criada com sucesso");
+    },
+    onError: (e: Error) => toast.error("Erro ao criar oficina: " + e.message),
+  });
+
+  // Editar oficina (dados + dono)
+  const editarOficina = useMutation({
+    mutationFn: async (payload: {
+      oficina_id: string;
+      nome?: string;
+      email?: string;
+      telefone?: string;
+      cnpj?: string;
+      endereco?: string;
+      plano_id?: string;
+      status?: string;
+      trial_ate?: string;
+      dono_user_id?: string;
+      dono_nome?: string;
+      dono_email?: string;
+      dono_senha?: string;
+    }) => {
+      const { error } = await supabase.rpc("admin_editar_oficina", {
+        p_oficina_id: payload.oficina_id,
+        p_nome: payload.nome ?? undefined,
+        p_email: payload.email ?? undefined,
+        p_telefone: payload.telefone ?? undefined,
+        p_cnpj: payload.cnpj ?? undefined,
+        p_endereco: payload.endereco ?? undefined,
+        p_plano_id: payload.plano_id ?? undefined,
+        p_status: payload.status ?? undefined,
+        p_trial_ate: payload.trial_ate ?? undefined,
+        p_dono_user_id: payload.dono_user_id ?? undefined,
+        p_dono_nome: payload.dono_nome ?? undefined,
+        p_dono_email: payload.dono_email ?? undefined,
+        p_dono_senha: payload.dono_senha ?? undefined,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin_oficinas"] });
+      toast.success("Oficina atualizada");
+    },
+    onError: (e: Error) => toast.error("Erro ao editar oficina: " + e.message),
+  });
+
   // Excluir oficina (todos os dados)
   const excluirOficina = useMutation({
     mutationFn: async (oficina_id: string) => {
@@ -266,13 +348,17 @@ export function useAdmin() {
     togglePlanoAtivo: togglePlanoAtivo.mutateAsync,
     excluirPlano: excluirPlano.mutateAsync,
     excluirOficina: excluirOficina.mutateAsync,
-    isUpdating: 
-      atualizarOficina.isPending || 
-      registrarPagamento.isPending || 
-      upsertPlano.isPending || 
+    criarOficina: criarOficina.mutateAsync,
+    editarOficina: editarOficina.mutateAsync,
+    isUpdating:
+      atualizarOficina.isPending ||
+      registrarPagamento.isPending ||
+      upsertPlano.isPending ||
       togglePlanoAtivo.isPending ||
       excluirPlano.isPending ||
-      excluirOficina.isPending,
+      excluirOficina.isPending ||
+      criarOficina.isPending ||
+      editarOficina.isPending,
 
     useHistoricoPagamentos,
   };
