@@ -380,28 +380,57 @@ function IntegrationsTab() {
 
 function TemplatesTab() {
   const templates = [
-    { id: 1, name: "Boas-vindas", channel: "WhatsApp", preview: "Olá {{clienteName}}, recebemos seu veículo..." },
-    { id: 2, name: "Orçamento aprovado", channel: "WhatsApp", preview: "Seu orçamento de {{valorTotal}} foi aprovado..." },
-    { id: 3, name: "Pronto para retirada", channel: "Email", preview: "Olá {{clienteName}}, seu {{modelo}} está pronto..." },
+    { id: 1, name: "Boas-vindas", channel: "WhatsApp", message: "Olá {{clienteName}}, recebemos seu {{modelo}} (placa {{placa}}). Em breve enviaremos novidades!" },
+    { id: 2, name: "Orçamento aprovado", channel: "WhatsApp", message: "Seu orçamento de {{valorTotal}} foi aprovado para o veículo {{modelo}} (placa {{placa}}). Vamos dar início ao serviço!" },
+    { id: 3, name: "Pronto para retirada", channel: "Email", message: "Olá {{clienteName}}, seu {{modelo}} está pronto para retirada! O valor total ficou em {{valorTotal}}." },
   ];
+
+  const [selectedTemplate, setSelectedTemplate] = useState(templates[0]);
+
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       <Card className="lg:col-span-1">
         <CardHeader><CardTitle>Templates</CardTitle></CardHeader>
         <CardContent className="space-y-2">
           {templates.map((t) => (
-            <button key={t.id} className="w-full rounded-md border p-3 text-left hover:bg-accent">
-              <div className="flex items-center justify-between"><span className="text-sm font-medium">{t.name}</span><Badge variant="secondary">{t.channel}</Badge></div>
-              <p className="mt-1 truncate text-xs text-muted-foreground">{t.preview}</p>
+            <button 
+              key={t.id} 
+              onClick={() => setSelectedTemplate(t)}
+              className={cn(
+                "w-full rounded-md border p-3 text-left hover:bg-accent transition-colors",
+                selectedTemplate.id === t.id && "bg-accent border-primary"
+              )}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">{t.name}</span>
+                <Badge variant="secondary">{t.channel}</Badge>
+              </div>
+              <p className="mt-1 truncate text-xs text-muted-foreground">{t.message}</p>
             </button>
           ))}
         </CardContent>
       </Card>
       <Card className="lg:col-span-2">
-        <CardHeader><CardTitle>Editor</CardTitle><CardDescription>Variáveis: {`{{clienteName}}`}, {`{{placa}}`}, {`{{modelo}}`}, {`{{valorTotal}}`}</CardDescription></CardHeader>
+        <CardHeader>
+          <CardTitle>Editor</CardTitle>
+          <CardDescription>Variáveis: {`{{clienteName}}`}, {`{{placa}}`}, {`{{modelo}}`}, {`{{valorTotal}}`}</CardDescription>
+        </CardHeader>
         <CardContent className="space-y-3">
-          <div className="space-y-2"><Label>Nome</Label><Input defaultValue="Boas-vindas" /></div>
-          <div className="space-y-2"><Label>Mensagem</Label><Textarea rows={6} defaultValue="Olá {{clienteName}}, recebemos seu {{modelo}} (placa {{placa}}). Em breve enviaremos novidades!" /></div>
+          <div className="space-y-2">
+            <Label>Nome</Label>
+            <Input 
+              value={selectedTemplate.name} 
+              onChange={(e) => setSelectedTemplate({ ...selectedTemplate, name: e.target.value })} 
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Mensagem</Label>
+            <Textarea 
+              rows={6} 
+              value={selectedTemplate.message} 
+              onChange={(e) => setSelectedTemplate({ ...selectedTemplate, message: e.target.value })}
+            />
+          </div>
           <Button onClick={() => toast.success("Template salvo")}>Salvar</Button>
         </CardContent>
       </Card>
