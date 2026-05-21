@@ -257,14 +257,28 @@ function IntegrationsTab() {
       error: "bg-destructive"
     };
 
+    const labels = {
+      idle: "Não testado",
+      testing: "Testando...",
+      connected: "Conectado",
+      disconnected: "Desconectado",
+      error: "Erro"
+    };
+
     return (
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className={cn("h-2.5 w-2.5 rounded-full cursor-help transition-colors", colors[status as keyof typeof colors] || "bg-muted")} />
+            <div className="flex items-center gap-2 cursor-help">
+              <div className={cn("h-2.5 w-2.5 rounded-full transition-colors", colors[status as keyof typeof colors] || "bg-muted")} />
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                {labels[status as keyof typeof colors] || status}
+              </span>
+            </div>
           </TooltipTrigger>
-          <TooltipContent>
-            <p>{message || (status === "idle" ? "Não testado" : status)}</p>
+          <TooltipContent side="bottom" className="max-w-xs">
+            <p className="text-xs font-semibold mb-1">{labels[status as keyof typeof colors]}</p>
+            <p className="text-xs opacity-90">{message || (status === "idle" ? "Clique em 'Testar conexão' para verificar." : "Sem detalhes disponíveis.")}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
