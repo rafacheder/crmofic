@@ -92,6 +92,59 @@ function AdminOficinas() {
     await atualizarOficina({ oficina_id: o.id, status: "trial", trial_ate: trial_ate.toISOString() });
   };
 
+  const openEditar = (o: OficinaAdmin) => {
+    setEditForm({
+      nome: o.nome ?? "",
+      email: o.email ?? "",
+      telefone: o.telefone ?? "",
+      cnpj: o.cnpj ?? "",
+      endereco: o.endereco ?? "",
+      plano_id: o.plano_id ?? "",
+      status: o.status ?? "trial",
+      dono_nome: o.dono_nome ?? "",
+      dono_email: o.dono_email ?? "",
+      dono_senha: "",
+    });
+    setEditarOpen(o);
+  };
+
+  const handleCriar = async () => {
+    if (!novaForm.nome || !novaForm.dono_nome || !novaForm.dono_email || novaForm.dono_senha.length < 6) return;
+    await criarOficina({
+      nome: novaForm.nome,
+      email: novaForm.email || undefined,
+      telefone: novaForm.telefone || undefined,
+      cnpj: novaForm.cnpj || undefined,
+      endereco: novaForm.endereco || undefined,
+      plano_id: novaForm.plano_id || undefined,
+      status: novaForm.status,
+      dono_nome: novaForm.dono_nome,
+      dono_email: novaForm.dono_email,
+      dono_senha: novaForm.dono_senha,
+    });
+    setNovaOpen(false);
+    setNovaForm(EMPTY_FORM);
+  };
+
+  const handleEditar = async () => {
+    if (!editarOpen || !editForm.nome) return;
+    await editarOficina({
+      oficina_id: editarOpen.id,
+      nome: editForm.nome,
+      email: editForm.email,
+      telefone: editForm.telefone,
+      cnpj: editForm.cnpj,
+      endereco: editForm.endereco,
+      plano_id: editForm.plano_id || undefined,
+      status: editForm.status,
+      dono_user_id: editarOpen.dono_id ?? undefined,
+      dono_nome: editForm.dono_nome || undefined,
+      dono_email: editForm.dono_email || undefined,
+      dono_senha: editForm.dono_senha ? editForm.dono_senha : undefined,
+    });
+    setEditarOpen(null);
+  };
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -99,6 +152,9 @@ function AdminOficinas() {
           <h1 className="text-2xl font-bold text-zinc-100">Oficinas</h1>
           <p className="text-sm text-zinc-500">{oficinas.length} oficinas cadastradas</p>
         </div>
+        <Button onClick={() => setNovaOpen(true)} className="gap-2 bg-emerald-600 hover:bg-emerald-700">
+          <Plus className="h-4 w-4" /> Nova Oficina
+        </Button>
       </div>
 
       {/* Filtros */}
