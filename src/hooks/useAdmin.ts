@@ -8,14 +8,20 @@ export type OficinaAdmin = {
   nome: string;
   email: string | null;
   telefone: string | null;
+  cnpj: string | null;
+  endereco: string | null;
   status: string;
   trial_ate: string | null;
+  plano_id: string | null;
   plano_nome: string | null;
   plano_preco: number | null;
   total_usuarios: number;
   total_ordens: number;
   ultima_atividade: string | null;
   created_at: string;
+  dono_id: string | null;
+  dono_nome: string | null;
+  dono_email: string | null;
 };
 
 export type Plano = {
