@@ -168,6 +168,7 @@ function KanbanTab() {
 
 function IntegrationsTab() {
   const { settings, updateSettings, isUpdating } = useSettings();
+  const testConn = useServerFn(testEvolutionConnection);
   const [evolution, setEvolution] = useState({
     url: "",
     key: "",
@@ -177,6 +178,9 @@ function IntegrationsTab() {
     url: "",
     name: ""
   });
+  
+  const [connStatus, setConnStatus] = useState<"idle" | "testing" | "connected" | "disconnected" | "error">("idle");
+  const [connMessage, setConnMessage] = useState("");
 
   useEffect(() => {
     if (settings) {
@@ -198,6 +202,43 @@ function IntegrationsTab() {
       evolution_api_key: evolution.key,
       evolution_instance_name: evolution.instance
     });
+    setConnStatus("idle");
+    setConnMessage("");
+  };
+
+  const handleTestEvolution = async () => {
+    if (!evolution.url || !evolution.key || !evolution.instance) {
+      toast.error("Preencha todos os campos da Evolution API antes de testar");
+      return;
+    }
+
+    setConnStatus("testing");
+    setConnMessage("Testando conexão...");
+
+    try {
+      const result = await testConn({ 
+        data: {
+          url: evolution.url,
+          apiKey: evolution.key,
+          instanceName: evolution.instance
+        }
+      });
+
+      setConnStatus(result.status as any);
+      setConnMessage(result.message);
+
+      if (result.status === "connected") {
+        toast.success(result.message);
+      } else if (result.status === "disconnected") {
+        toast.warning(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error: any) {
+      setConnStatus("error");
+      setConnMessage("Erro interno ao testar conexão");
+      toast.error("Erro ao processar o teste de conexão");
+    }
   };
 
   const handleSaveTypebot = async () => {
@@ -207,13 +248,53 @@ function IntegrationsTab() {
     });
   };
 
+  const StatusDot = ({ status, message }: { status: string, message: string }) => {
+    const colors = {
+      idle: "bg-muted",
+      testing: "bg-primary animate-pulse",
+      connected: "bg-success",
+      disconnected: "bg-warning",
+      error: "bg-destructive"
+    };
+
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className={cn("h-2.5 w-2.5 rounded-full cursor-help transition-colors", colors[status as keyof typeof colors] || "bg-muted")} />
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{message || (status === "idle" ? "Não testado" : status)}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  };
+
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-primary" />
-            <CardTitle>Evolution API</CardTitle>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Zap className="h-5 w-5 text-primary" />
+              <CardTitle>Evolution API</CardTitle>
+              <StatusDot status={connStatus} message={connMessage} />
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleTestEvolution} 
+              disabled={connStatus === "testing" || !evolution.url || !evolution.key || !evolution.instance}
+              className="h-8 gap-1.5"
+            >
+              {connStatus === "testing" ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3.5 w-3.5" />
+              )}
+              Testar conexão
+            </Button>
           </div>
           <CardDescription>Configure o Evolution API para disparar automações via WhatsApp.</CardDescription>
         </CardHeader>
