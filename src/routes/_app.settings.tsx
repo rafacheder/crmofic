@@ -46,6 +46,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { testEvolutionConnection } from "@/lib/evolution.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { cn } from "@/lib/utils";
+import { useTemplates, type TemplateMensagem } from "@/hooks/useTemplates";
 
 export const Route = createFileRoute("/_app/settings")({ component: SettingsPage });
 
@@ -379,61 +380,200 @@ function IntegrationsTab() {
 }
 
 function TemplatesTab() {
-  const templates = [
-    { id: 1, name: "Boas-vindas", channel: "WhatsApp", message: "Olá {{clienteName}}, recebemos seu {{modelo}} (placa {{placa}}). Em breve enviaremos novidades!" },
-    { id: 2, name: "Orçamento aprovado", channel: "WhatsApp", message: "Seu orçamento de {{valorTotal}} foi aprovado para o veículo {{modelo}} (placa {{placa}}). Vamos dar início ao serviço!" },
-    { id: 3, name: "Pronto para retirada", channel: "Email", message: "Olá {{clienteName}}, seu {{modelo}} está pronto para retirada! O valor total ficou em {{valorTotal}}." },
-  ];
+  const { templates, isLoading, createTemplate, updateTemplate, deleteTemplate, isCreating, isUpdating, isDeleting } = useTemplates();
+  const [selectedTemplate, setSelectedTemplate] = useState<Partial<TemplateMensagem> | null>(null);
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
 
-  const [selectedTemplate, setSelectedTemplate] = useState(templates[0]);
+  const handleSave = async () => {
+    if (!selectedTemplate?.nome || !selectedTemplate?.conteudo) {
+      toast.error("Nome e mensagem são obrigatórios");
+      return;
+    }
+
+    try {
+      if (selectedTemplate.id) {
+        await updateTemplate({
+          id: selectedTemplate.id,
+          nome: selectedTemplate.nome,
+          canal: selectedTemplate.canal || "WhatsApp",
+          conteudo: selectedTemplate.conteudo,
+        });
+      } else {
+        await createTemplate({
+          nome: selectedTemplate.nome,
+          canal: selectedTemplate.canal || "WhatsApp",
+          conteudo: selectedTemplate.conteudo,
+        });
+        setSelectedTemplate(null);
+      }
+    } catch (error) {
+      // Erro já tratado no hook
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteTemplate(id);
+      if (selectedTemplate?.id === id) {
+        setSelectedTemplate(null);
+      }
+      setIsDeletingId(null);
+    } catch (error) {
+      // Erro já tratado no hook
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       <Card className="lg:col-span-1">
-        <CardHeader><CardTitle>Templates</CardTitle></CardHeader>
-        <CardContent className="space-y-2">
-          {templates.map((t) => (
-            <button 
-              key={t.id} 
-              onClick={() => setSelectedTemplate(t)}
-              className={cn(
-                "w-full rounded-md border p-3 text-left hover:bg-accent transition-colors",
-                selectedTemplate.id === t.id && "bg-accent border-primary"
-              )}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">{t.name}</span>
-                <Badge variant="secondary">{t.channel}</Badge>
-              </div>
-              <p className="mt-1 truncate text-xs text-muted-foreground">{t.message}</p>
-            </button>
-          ))}
-        </CardContent>
-      </Card>
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle>Editor</CardTitle>
-          <CardDescription>Variáveis: {`{{clienteName}}`}, {`{{placa}}`}, {`{{modelo}}`}, {`{{valorTotal}}`}</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle>Templates</CardTitle>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setSelectedTemplate({ nome: "", canal: "WhatsApp", conteudo: "" })}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Novo
+          </Button>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-2">
-            <Label>Nome</Label>
-            <Input 
-              value={selectedTemplate.name} 
-              onChange={(e) => setSelectedTemplate({ ...selectedTemplate, name: e.target.value })} 
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Mensagem</Label>
-            <Textarea 
-              rows={6} 
-              value={selectedTemplate.message} 
-              onChange={(e) => setSelectedTemplate({ ...selectedTemplate, message: e.target.value })}
-            />
-          </div>
-          <Button onClick={() => toast.success("Template salvo")}>Salvar</Button>
+        <CardContent className="space-y-2 mt-4">
+          {templates.length === 0 ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              Nenhum template encontrado.
+            </div>
+          ) : (
+            templates.map((t) => (
+              <div key={t.id} className="group relative">
+                <button 
+                  onClick={() => setSelectedTemplate(t)}
+                  className={cn(
+                    "w-full rounded-md border p-3 text-left hover:bg-accent transition-colors pr-10",
+                    selectedTemplate?.id === t.id && "bg-accent border-primary"
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium truncate pr-2">{t.nome}</span>
+                    <Badge variant="secondary" className="shrink-0">{t.canal}</Badge>
+                  </div>
+                  <p className="mt-1 truncate text-xs text-muted-foreground">{t.conteudo}</p>
+                </button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsDeletingId(t.id);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))
+          )}
         </CardContent>
       </Card>
+
+      <Card className="lg:col-span-2">
+        {!selectedTemplate ? (
+          <div className="flex h-full flex-col items-center justify-center py-12 text-center">
+            <MessageSquare className="h-12 w-12 text-muted-foreground/20" />
+            <h3 className="mt-4 text-lg font-medium">Editor de Template</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Selecione um template ao lado ou crie um novo para começar.
+            </p>
+          </div>
+        ) : (
+          <>
+            <CardHeader>
+              <CardTitle>{selectedTemplate.id ? "Editar Template" : "Novo Template"}</CardTitle>
+              <CardDescription>
+                Variáveis: {`{{clienteName}}`}, {`{{placa}}`}, {`{{modelo}}`}, {`{{valorTotal}}`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Nome do Template</Label>
+                  <Input 
+                    placeholder="Ex: Boas-vindas"
+                    value={selectedTemplate.nome || ""} 
+                    onChange={(e) => setSelectedTemplate({ ...selectedTemplate, nome: e.target.value })} 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Canal</Label>
+                  <Select 
+                    value={selectedTemplate.canal || "WhatsApp"}
+                    onValueChange={(val) => setSelectedTemplate({ ...selectedTemplate, canal: val })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o canal" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="WhatsApp">WhatsApp</SelectItem>
+                      <SelectItem value="Email">Email</SelectItem>
+                      <SelectItem value="SMS">SMS</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Mensagem</Label>
+                <Textarea 
+                  rows={8} 
+                  placeholder="Escreva sua mensagem aqui..."
+                  value={selectedTemplate.conteudo || ""} 
+                  onChange={(e) => setSelectedTemplate({ ...selectedTemplate, conteudo: e.target.value })}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setSelectedTemplate(null)}>
+                  Cancelar
+                </Button>
+                <Button 
+                  onClick={handleSave} 
+                  disabled={isCreating || isUpdating}
+                >
+                  {(isCreating || isUpdating) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Salvar Template
+                </Button>
+              </div>
+            </CardContent>
+          </>
+        )}
+      </Card>
+
+      <AlertDialog open={!!isDeletingId} onOpenChange={(open) => !open && setIsDeletingId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir template?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. O template será removido permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => isDeletingId && handleDelete(isDeletingId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDeleting}
+            >
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
