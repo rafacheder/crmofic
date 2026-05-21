@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, CheckCircle, XCircle, Clock, CreditCard, ChevronDown, Package, Trash2 } from "lucide-react";
+import { Search, CheckCircle, XCircle, Clock, CreditCard, ChevronDown, Package, Trash2, Plus, Pencil } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
