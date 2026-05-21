@@ -450,6 +450,138 @@ function AdminOficinas() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialog: Nova Oficina */}
+      <Dialog open={novaOpen} onOpenChange={(o) => { setNovaOpen(o); if (!o) setNovaForm(EMPTY_FORM); }}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto border-zinc-700 bg-zinc-900 text-zinc-100 sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Nova Oficina</DialogTitle>
+            <p className="text-sm text-zinc-400">Cadastre uma oficina e seu usuário dono.</p>
+          </DialogHeader>
+          <OficinaFormFields form={novaForm} setForm={setNovaForm} planos={planos} senhaObrigatoria />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setNovaOpen(false)} className="text-zinc-400">Cancelar</Button>
+            <Button
+              onClick={handleCriar}
+              disabled={isUpdating || !novaForm.nome || !novaForm.dono_nome || !novaForm.dono_email || novaForm.dono_senha.length < 6}
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              {isUpdating ? "Criando..." : "Criar oficina"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Editar Oficina */}
+      <Dialog open={!!editarOpen} onOpenChange={(o) => !o && setEditarOpen(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto border-zinc-700 bg-zinc-900 text-zinc-100 sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar oficina</DialogTitle>
+            <p className="text-sm text-zinc-400">{editarOpen?.nome}</p>
+          </DialogHeader>
+          <OficinaFormFields form={editForm} setForm={setEditForm} planos={planos} senhaObrigatoria={false} />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditarOpen(null)} className="text-zinc-400">Cancelar</Button>
+            <Button
+              onClick={handleEditar}
+              disabled={isUpdating || !editForm.nome}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isUpdating ? "Salvando..." : "Salvar alterações"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function OficinaFormFields({
+  form, setForm, planos, senhaObrigatoria,
+}: {
+  form: OficinaForm;
+  setForm: React.Dispatch<React.SetStateAction<OficinaForm>>;
+  planos: { id: string; nome: string; preco: number; ativo: boolean }[];
+  senhaObrigatoria: boolean;
+}) {
+  const set = <K extends keyof OficinaForm>(k: K, v: OficinaForm[K]) => setForm((f) => ({ ...f, [k]: v }));
+  return (
+    <div className="space-y-5">
+      <div className="space-y-3">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Dados da oficina</h3>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label className="text-zinc-300">Nome *</Label>
+            <Input value={form.nome} onChange={(e) => set("nome", e.target.value)} className="border-zinc-700 bg-zinc-800 text-zinc-100" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-zinc-300">E-mail</Label>
+            <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} className="border-zinc-700 bg-zinc-800 text-zinc-100" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-zinc-300">Telefone</Label>
+            <Input value={form.telefone} onChange={(e) => set("telefone", e.target.value)} className="border-zinc-700 bg-zinc-800 text-zinc-100" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-zinc-300">CNPJ</Label>
+            <Input value={form.cnpj} onChange={(e) => set("cnpj", e.target.value)} className="border-zinc-700 bg-zinc-800 text-zinc-100" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-zinc-300">Status</Label>
+            <Select value={form.status} onValueChange={(v) => set("status", v)}>
+              <SelectTrigger className="border-zinc-700 bg-zinc-800"><SelectValue /></SelectTrigger>
+              <SelectContent className="border-zinc-700 bg-zinc-900">
+                <SelectItem value="trial">Trial</SelectItem>
+                <SelectItem value="ativo">Ativo</SelectItem>
+                <SelectItem value="suspenso">Suspenso</SelectItem>
+                <SelectItem value="cancelado">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label className="text-zinc-300">Endereço</Label>
+            <Textarea rows={2} value={form.endereco} onChange={(e) => set("endereco", e.target.value)} className="border-zinc-700 bg-zinc-800 text-zinc-100" />
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label className="text-zinc-300">Plano</Label>
+            <Select value={form.plano_id || "__none__"} onValueChange={(v) => set("plano_id", v === "__none__" ? "" : v)}>
+              <SelectTrigger className="border-zinc-700 bg-zinc-800"><SelectValue placeholder="Sem plano" /></SelectTrigger>
+              <SelectContent className="border-zinc-700 bg-zinc-900">
+                <SelectItem value="__none__">Sem plano</SelectItem>
+                {planos.filter((p) => p.ativo).map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.nome} — R$ {p.preco}/mês</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-3 border-t border-zinc-800 pt-4">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Usuário dono</h3>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label className="text-zinc-300">Nome {senhaObrigatoria && "*"}</Label>
+            <Input value={form.dono_nome} onChange={(e) => set("dono_nome", e.target.value)} className="border-zinc-700 bg-zinc-800 text-zinc-100" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-zinc-300">E-mail {senhaObrigatoria && "*"}</Label>
+            <Input type="email" value={form.dono_email} onChange={(e) => set("dono_email", e.target.value)} className="border-zinc-700 bg-zinc-800 text-zinc-100" />
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label className="text-zinc-300">
+              Senha {senhaObrigatoria ? "* (mín. 6 caracteres)" : "(deixe em branco para manter)"}
+            </Label>
+            <Input
+              type="password"
+              value={form.dono_senha}
+              onChange={(e) => set("dono_senha", e.target.value)}
+              className="border-zinc-700 bg-zinc-800 text-zinc-100"
+              placeholder={senhaObrigatoria ? "" : "••••••"}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
