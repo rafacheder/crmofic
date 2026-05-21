@@ -236,6 +236,13 @@ function AdminOficinas() {
                       <DropdownMenuContent align="end" className="border-zinc-700 bg-zinc-900 text-zinc-200">
                         <DropdownMenuItem
                           className="cursor-pointer gap-2 focus:bg-zinc-800"
+                          onClick={() => openEditar(o)}
+                        >
+                          <Pencil className="h-4 w-4 text-blue-400" /> Editar oficina
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-zinc-800" />
+                        <DropdownMenuItem
+                          className="cursor-pointer gap-2 focus:bg-zinc-800"
                           onClick={() => { setPagamentoDialog(o); setFormPgto((f) => ({ ...f, plano_id: "", valor: String(o.plano_preco ?? ""), })); }}
                         >
                           <CreditCard className="h-4 w-4 text-emerald-400" /> Registrar pagamento
