@@ -24,7 +24,7 @@ export function useTemplates() {
       const { data, error } = await supabase
         .from("templates_mensagem")
         .select("*")
-        .eq("oficina_id", oficinaId)
+        .eq("oficina_id", oficinaId as string)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -33,10 +33,10 @@ export function useTemplates() {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (novo: Partial<TemplateMensagem>) => {
+    mutationFn: async (novo: { nome: string; canal: string; conteudo: string; tipo?: string }) => {
       const { data, error } = await supabase
         .from("templates_mensagem")
-        .insert([{ ...novo, oficina_id: oficinaId }])
+        .insert([{ ...novo, oficina_id: oficinaId as string }])
         .select()
         .single();
 
@@ -53,7 +53,7 @@ export function useTemplates() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (update: Partial<TemplateMensagem> & { id: string }) => {
+    mutationFn: async (update: { id: string; nome?: string; canal?: string; conteudo?: string; tipo?: string }) => {
       const { data, error } = await supabase
         .from("templates_mensagem")
         .update(update)
