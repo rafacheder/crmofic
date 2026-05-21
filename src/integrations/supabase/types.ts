@@ -946,6 +946,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_excluir_oficina: {
+        Args: { p_oficina_id: string }
+        Returns: undefined
+      }
       admin_listar_oficinas: {
         Args: never
         Returns: {

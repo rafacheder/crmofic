@@ -4,16 +4,19 @@ import { useAdmin, OficinaAdmin } from "@/hooks/useAdmin";
 import { StatusBadge } from "@/components/admin-status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, CheckCircle, XCircle, Clock, CreditCard, ChevronDown } from "lucide-react";
+import { Search, CheckCircle, XCircle, Clock, CreditCard, ChevronDown, Package, Trash2 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -21,11 +24,13 @@ import {
 export const Route = createFileRoute("/admin/oficinas")({ component: AdminOficinas });
 
 function AdminOficinas() {
-  const { oficinas, isLoadingOficinas, planos, atualizarOficina, registrarPagamento, isUpdating } = useAdmin();
+  const { oficinas, isLoadingOficinas, planos, atualizarOficina, registrarPagamento, excluirOficina, isUpdating } = useAdmin();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
   const [pagamentoDialog, setPagamentoDialog] = useState<OficinaAdmin | null>(null);
   const [planoDialog, setPlanoDialog] = useState<OficinaAdmin | null>(null);
+  const [excluirDialog, setExcluirDialog] = useState<OficinaAdmin | null>(null);
+  const [novoPlanoId, setNovoPlanoId] = useState<string>("");
 
   // Form pagamento
   const [formPgto, setFormPgto] = useState({
@@ -174,6 +179,20 @@ function AdminOficinas() {
                         <DropdownMenuItem className="cursor-pointer gap-2 focus:bg-zinc-800" onClick={() => handleTrial(o, 30)}>
                           <Clock className="h-4 w-4 text-amber-400" /> +30 dias trial
                         </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-zinc-800" />
+                        <DropdownMenuItem
+                          className="cursor-pointer gap-2 focus:bg-zinc-800"
+                          onClick={() => { setPlanoDialog(o); setNovoPlanoId(""); }}
+                        >
+                          <Package className="h-4 w-4 text-blue-400" /> Mudar plano
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-zinc-800" />
+                        <DropdownMenuItem
+                          className="cursor-pointer gap-2 text-red-400 focus:bg-zinc-800 focus:text-red-400"
+                          onClick={() => setExcluirDialog(o)}
+                        >
+                          <Trash2 className="h-4 w-4" /> Excluir oficina
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </td>
@@ -269,6 +288,82 @@ function AdminOficinas() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog: Mudar Plano */}
+      <Dialog open={!!planoDialog} onOpenChange={() => setPlanoDialog(null)}>
+        <DialogContent className="border-zinc-700 bg-zinc-900 text-zinc-100">
+          <DialogHeader>
+            <DialogTitle>Mudar plano</DialogTitle>
+            <p className="text-sm text-zinc-400">
+              {planoDialog?.nome} — atual: {planoDialog?.plano_nome ?? "nenhum"}
+            </p>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label className="text-zinc-300">Novo plano</Label>
+            <Select value={novoPlanoId} onValueChange={setNovoPlanoId}>
+              <SelectTrigger className="border-zinc-700 bg-zinc-800">
+                <SelectValue placeholder="Selecione o plano" />
+              </SelectTrigger>
+              <SelectContent className="border-zinc-700 bg-zinc-900">
+                {planos.filter((p) => p.ativo).map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.nome} — R$ {p.preco}/mês
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="pt-2 text-xs text-zinc-500">
+              Apenas altera o plano vinculado. Não gera cobrança nem assinatura.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPlanoDialog(null)} className="text-zinc-400">
+              Cancelar
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!planoDialog || !novoPlanoId) return;
+                await atualizarOficina({ oficina_id: planoDialog.id, plano_id: novoPlanoId });
+                setPlanoDialog(null);
+              }}
+              disabled={isUpdating || !novoPlanoId}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isUpdating ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* AlertDialog: Excluir Oficina */}
+      <AlertDialog open={!!excluirDialog} onOpenChange={(open) => !open && setExcluirDialog(null)}>
+        <AlertDialogContent className="border-zinc-700 bg-zinc-900 text-zinc-100">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir {excluirDialog?.nome}?</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-400">
+              Todos os dados desta oficina serão removidos permanentemente: ordens de serviço,
+              clientes, veículos, agendamentos, lembretes, catálogo e usuários vinculados. Esta
+              ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!excluirDialog) return;
+                await excluirOficina(excluirDialog.id);
+                setExcluirDialog(null);
+              }}
+              disabled={isUpdating}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isUpdating ? "Excluindo..." : "Excluir definitivamente"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
