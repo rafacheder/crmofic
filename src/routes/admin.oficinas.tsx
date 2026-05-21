@@ -23,14 +23,37 @@ import {
 
 export const Route = createFileRoute("/admin/oficinas")({ component: AdminOficinas });
 
+type OficinaForm = {
+  nome: string;
+  email: string;
+  telefone: string;
+  cnpj: string;
+  endereco: string;
+  plano_id: string;
+  status: string;
+  dono_nome: string;
+  dono_email: string;
+  dono_senha: string;
+};
+
+const EMPTY_FORM: OficinaForm = {
+  nome: "", email: "", telefone: "", cnpj: "", endereco: "",
+  plano_id: "", status: "trial",
+  dono_nome: "", dono_email: "", dono_senha: "",
+};
+
 function AdminOficinas() {
-  const { oficinas, isLoadingOficinas, planos, atualizarOficina, registrarPagamento, excluirOficina, isUpdating } = useAdmin();
+  const { oficinas, isLoadingOficinas, planos, atualizarOficina, registrarPagamento, excluirOficina, criarOficina, editarOficina, isUpdating } = useAdmin();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
   const [pagamentoDialog, setPagamentoDialog] = useState<OficinaAdmin | null>(null);
   const [planoDialog, setPlanoDialog] = useState<OficinaAdmin | null>(null);
   const [excluirDialog, setExcluirDialog] = useState<OficinaAdmin | null>(null);
   const [novoPlanoId, setNovoPlanoId] = useState<string>("");
+  const [novaOpen, setNovaOpen] = useState(false);
+  const [editarOpen, setEditarOpen] = useState<OficinaAdmin | null>(null);
+  const [novaForm, setNovaForm] = useState<OficinaForm>(EMPTY_FORM);
+  const [editForm, setEditForm] = useState<OficinaForm>(EMPTY_FORM);
 
   // Form pagamento
   const [formPgto, setFormPgto] = useState({
