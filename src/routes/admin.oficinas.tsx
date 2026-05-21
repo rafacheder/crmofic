@@ -179,6 +179,20 @@ function AdminOficinas() {
                         <DropdownMenuItem className="cursor-pointer gap-2 focus:bg-zinc-800" onClick={() => handleTrial(o, 30)}>
                           <Clock className="h-4 w-4 text-amber-400" /> +30 dias trial
                         </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-zinc-800" />
+                        <DropdownMenuItem
+                          className="cursor-pointer gap-2 focus:bg-zinc-800"
+                          onClick={() => { setPlanoDialog(o); setNovoPlanoId(""); }}
+                        >
+                          <Package className="h-4 w-4 text-blue-400" /> Mudar plano
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-zinc-800" />
+                        <DropdownMenuItem
+                          className="cursor-pointer gap-2 text-red-400 focus:bg-zinc-800 focus:text-red-400"
+                          onClick={() => setExcluirDialog(o)}
+                        >
+                          <Trash2 className="h-4 w-4" /> Excluir oficina
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </td>
