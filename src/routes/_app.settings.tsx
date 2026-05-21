@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { GripVertical, Trash2, Plus, MessageSquare, Bot, Zap, Loader2, UserPlus, Check, X, Pencil } from "lucide-react";
+import { GripVertical, Trash2, Plus, MessageSquare, Bot, Zap, Loader2, UserPlus, Check, X, Pencil, RefreshCw } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -30,6 +30,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useStore, store } from "@/lib/store";
 import { toast } from "sonner";
 import { ColumnAutomationsDialog } from "@/components/column-automations-dialog";
@@ -37,6 +43,9 @@ import { type KanbanColumn } from "@/lib/mock-data";
 import { useSettings } from "@/hooks/useSettings";
 import { useUsuariosOficina } from "@/hooks/useUsuariosOficina";
 import { useAuth } from "@/contexts/AuthContext";
+import { testEvolutionConnection } from "@/lib/evolution.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/settings")({ component: SettingsPage });
 
