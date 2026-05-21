@@ -946,6 +946,39 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_criar_oficina: {
+        Args: {
+          p_cnpj?: string
+          p_dono_email?: string
+          p_dono_nome?: string
+          p_dono_senha?: string
+          p_email?: string
+          p_endereco?: string
+          p_nome: string
+          p_plano_id?: string
+          p_status?: string
+          p_telefone?: string
+        }
+        Returns: string
+      }
+      admin_editar_oficina: {
+        Args: {
+          p_cnpj?: string
+          p_dono_email?: string
+          p_dono_nome?: string
+          p_dono_senha?: string
+          p_dono_user_id?: string
+          p_email?: string
+          p_endereco?: string
+          p_nome?: string
+          p_oficina_id: string
+          p_plano_id?: string
+          p_status?: string
+          p_telefone?: string
+          p_trial_ate?: string
+        }
+        Returns: undefined
+      }
       admin_excluir_oficina: {
         Args: { p_oficina_id: string }
         Returns: undefined
@@ -953,10 +986,16 @@ export type Database = {
       admin_listar_oficinas: {
         Args: never
         Returns: {
+          cnpj: string
           created_at: string
+          dono_email: string
+          dono_id: string
+          dono_nome: string
           email: string
+          endereco: string
           id: string
           nome: string
+          plano_id: string
           plano_nome: string
           plano_preco: number
           status: string
