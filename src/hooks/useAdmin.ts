@@ -265,12 +265,14 @@ export function useAdmin() {
     upsertPlano: upsertPlano.mutateAsync,
     togglePlanoAtivo: togglePlanoAtivo.mutateAsync,
     excluirPlano: excluirPlano.mutateAsync,
+    excluirOficina: excluirOficina.mutateAsync,
     isUpdating: 
       atualizarOficina.isPending || 
       registrarPagamento.isPending || 
       upsertPlano.isPending || 
       togglePlanoAtivo.isPending ||
-      excluirPlano.isPending,
+      excluirPlano.isPending ||
+      excluirOficina.isPending,
 
     useHistoricoPagamentos,
   };
