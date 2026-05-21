@@ -348,13 +348,17 @@ export function useAdmin() {
     togglePlanoAtivo: togglePlanoAtivo.mutateAsync,
     excluirPlano: excluirPlano.mutateAsync,
     excluirOficina: excluirOficina.mutateAsync,
-    isUpdating: 
-      atualizarOficina.isPending || 
-      registrarPagamento.isPending || 
-      upsertPlano.isPending || 
+    criarOficina: criarOficina.mutateAsync,
+    editarOficina: editarOficina.mutateAsync,
+    isUpdating:
+      atualizarOficina.isPending ||
+      registrarPagamento.isPending ||
+      upsertPlano.isPending ||
       togglePlanoAtivo.isPending ||
       excluirPlano.isPending ||
-      excluirOficina.isPending,
+      excluirOficina.isPending ||
+      criarOficina.isPending ||
+      editarOficina.isPending,
 
     useHistoricoPagamentos,
   };
