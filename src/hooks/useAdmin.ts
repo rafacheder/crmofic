@@ -223,6 +223,19 @@ export function useAdmin() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Excluir oficina (todos os dados)
+  const excluirOficina = useMutation({
+    mutationFn: async (oficina_id: string) => {
+      const { error } = await supabase.rpc("admin_excluir_oficina", { p_oficina_id: oficina_id });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin_oficinas"] });
+      toast.success("Oficina excluída com sucesso");
+    },
+    onError: (e: Error) => toast.error("Erro ao excluir: " + e.message),
+  });
+
   // Histórico de pagamentos de uma oficina
 
   const useHistoricoPagamentos = (oficina_id: string) =>
