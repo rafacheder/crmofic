@@ -35,13 +35,16 @@ Deno.serve(async (req) => {
 
     const { data, error } = await supabase
       .from("clientes")
-      .insert({
+      .upsert({
         nome,
         telefone,
         oficina_id,
+      }, { 
+        onConflict: 'telefone, oficina_id',
+        ignoreDuplicates: false 
       })
       .select("id")
-      .single();
+      .maybeSingle();
 
     if (error) {
       return new Response(
