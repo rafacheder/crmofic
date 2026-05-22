@@ -9,3 +9,7 @@ verify_jwt = false
 [functions.typebot-buscar-os]
 verify_jwt = false
 
+[functions.typebot-criar-os]
+verify_jwt = false
+
+
