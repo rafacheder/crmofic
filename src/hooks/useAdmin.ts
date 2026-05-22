@@ -280,6 +280,10 @@ export function useAdmin() {
       plano_id?: string;
       status?: string;
       trial_ate?: string;
+      typebot_slug?: string;
+      evolution_api_url?: string;
+      evolution_api_key?: string;
+      evolution_instance_name?: string;
       dono_user_id?: string;
       dono_nome?: string;
       dono_email?: string;
@@ -295,6 +299,10 @@ export function useAdmin() {
         p_plano_id: payload.plano_id ?? undefined,
         p_status: payload.status ?? undefined,
         p_trial_ate: payload.trial_ate ?? undefined,
+        p_typebot_slug: payload.typebot_slug ?? undefined,
+        p_evolution_api_url: payload.evolution_api_url ?? undefined,
+        p_evolution_api_key: payload.evolution_api_key ?? undefined,
+        p_evolution_instance_name: payload.evolution_instance_name ?? undefined,
         p_dono_user_id: payload.dono_user_id ?? undefined,
         p_dono_nome: payload.dono_nome ?? undefined,
         p_dono_email: payload.dono_email ?? undefined,
