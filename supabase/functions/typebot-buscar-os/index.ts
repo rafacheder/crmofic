@@ -32,13 +32,12 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Busca a OS mais recente que não está deletada (coluna_id is not null)
+    // Busca a OS mais recente
     const { data, error } = await supabase
       .from("ordens_servico")
       .select("numero, token")
       .eq("cliente_id", cliente_id)
       .eq("oficina_id", oficina_id)
-      .not("coluna_id", "is", null)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
