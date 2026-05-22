@@ -1,0 +1,1 @@
+ALTER TABLE public.oficinas ADD COLUMN typebot_slug TEXT;

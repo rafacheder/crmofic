@@ -475,6 +475,7 @@ export type Database = {
           status: string | null
           telefone: string | null
           trial_ate: string | null
+          typebot_slug: string | null
         }
         Insert: {
           cnpj?: string | null
@@ -489,6 +490,7 @@ export type Database = {
           status?: string | null
           telefone?: string | null
           trial_ate?: string | null
+          typebot_slug?: string | null
         }
         Update: {
           cnpj?: string | null
@@ -503,6 +505,7 @@ export type Database = {
           status?: string | null
           telefone?: string | null
           trial_ate?: string | null
+          typebot_slug?: string | null
         }
         Relationships: [
           {
