@@ -12,4 +12,9 @@ verify_jwt = false
 [functions.typebot-criar-os]
 verify_jwt = false
 
+[functions.whatsapp-typebot-bridge]
+verify_jwt = false
+
+
+
 
