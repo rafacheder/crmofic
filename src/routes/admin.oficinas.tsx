@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAdmin, OficinaAdmin } from "@/hooks/useAdmin";
 import { StatusBadge } from "@/components/admin-status-badge";
+import { WhatsAppIntegrationGuide } from "@/components/whatsapp-integration-guide";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, CheckCircle, XCircle, Clock, CreditCard, ChevronDown, Package, Trash2, Plus, Pencil } from "lucide-react";
+import { Search, CheckCircle, XCircle, Clock, CreditCard, ChevronDown, Package, Trash2, Plus, Pencil, Eye } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
