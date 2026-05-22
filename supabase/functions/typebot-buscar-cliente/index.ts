@@ -6,7 +6,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
@@ -17,9 +17,18 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    const telefone = url.searchParams.get("telefone");
-    const oficina_id = url.searchParams.get("oficina_id");
+    let telefone: string | null = null;
+    let oficina_id: string | null = null;
+
+    if (req.method === "POST") {
+      const body = await req.json();
+      telefone = body?.telefone ?? null;
+      oficina_id = body?.oficina_id ?? null;
+    } else {
+      const url = new URL(req.url);
+      telefone = url.searchParams.get("telefone");
+      oficina_id = url.searchParams.get("oficina_id");
+    }
 
     if (!telefone || !oficina_id) {
       return new Response(
