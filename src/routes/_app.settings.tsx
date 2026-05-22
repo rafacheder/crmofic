@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { GripVertical, Trash2, Plus, MessageSquare, Bot, Zap, Loader2, UserPlus, Check, X, Pencil, RefreshCw } from "lucide-react";
+import { GripVertical, Trash2, Plus, MessageSquare, Bot, Zap, Loader2, UserPlus, Check, X, Pencil, RefreshCw, User as UserIcon, Camera } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -36,6 +36,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useStore, store } from "@/lib/store";
 import { toast } from "sonner";
 import { ColumnAutomationsDialog } from "@/components/column-automations-dialog";
@@ -47,23 +48,35 @@ import { testEvolutionConnection } from "@/lib/evolution.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { cn } from "@/lib/utils";
 import { useTemplates, type TemplateMensagem } from "@/hooks/useTemplates";
+import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/_app/settings")({ component: SettingsPage });
+export const Route = createFileRoute("/_app/settings")({ 
+  component: SettingsPage,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      tab: (search.tab as string) || "profile",
+    };
+  },
+});
 
 const days = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
 function SettingsPage() {
+  const { tab } = Route.useSearch();
+
   return (
     <>
       <AppHeader title="Configurações" />
-      <Tabs defaultValue="general" className="p-4">
+      <Tabs defaultValue={tab} className="p-4">
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
+          <TabsTrigger value="profile">Meu Perfil</TabsTrigger>
           <TabsTrigger value="general">Geral</TabsTrigger>
           <TabsTrigger value="kanban">Kanban</TabsTrigger>
           <TabsTrigger value="integrations">Integrações</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="users">Usuários</TabsTrigger>
         </TabsList>
+        <TabsContent value="profile" className="mt-4"><ProfileTab /></TabsContent>
         <TabsContent value="general" className="mt-4"><GeneralTab /></TabsContent>
         <TabsContent value="kanban" className="mt-4"><KanbanTab /></TabsContent>
         <TabsContent value="integrations" className="mt-4"><IntegrationsTab /></TabsContent>
@@ -71,6 +84,155 @@ function SettingsPage() {
         <TabsContent value="users" className="mt-4"><UsersTab /></TabsContent>
       </Tabs>
     </>
+  );
+}
+
+function ProfileTab() {
+  const { usuario, refreshUsuario } = useAuth();
+  const [nome, setNome] = useState(usuario?.nome || "");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (usuario?.nome) setNome(usuario.nome);
+  }, [usuario]);
+
+  const handleSave = async () => {
+    if (!nome.trim()) return;
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from("usuarios")
+        .update({ nome })
+        .eq("id", usuario?.id);
+
+      if (error) throw error;
+      await refreshUsuario();
+      toast.success("Perfil atualizado com sucesso!");
+    } catch (error) {
+      toast.error("Erro ao atualizar perfil");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !usuario) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("A imagem deve ter no máximo 2MB");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${usuario.id}/${Math.random()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from("usuarios")
+        .update({ avatar_url: publicUrl })
+        .eq("id", usuario.id);
+
+      if (updateError) throw updateError;
+
+      await refreshUsuario();
+      toast.success("Foto de perfil atualizada!");
+    } catch (error) {
+      toast.error("Erro ao enviar foto");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const getIniciais = (nome: string) => {
+    if (!nome) return "??";
+    const parts = nome.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return parts[0].substring(0, 2).toUpperCase();
+  };
+
+  return (
+    <div className="max-w-2xl space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Meu Perfil</CardTitle>
+          <CardDescription>Gerencie suas informações pessoais e foto de perfil.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex flex-col items-center gap-4 sm:flex-row">
+            <div className="relative group">
+              <Avatar className="h-24 w-24 border-2 border-zinc-800">
+                {usuario?.avatar_url && <AvatarImage src={usuario.avatar_url} />}
+                <AvatarFallback className="bg-zinc-800 text-xl text-zinc-400">
+                  {usuario?.nome ? getIniciais(usuario.nome) : "??"}
+                </AvatarFallback>
+              </Avatar>
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 disabled:opacity-50"
+              >
+                {isUploading ? <Loader2 className="h-6 w-6 animate-spin text-white" /> : <Camera className="h-6 w-6 text-white" />}
+              </button>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*" 
+                onChange={handleAvatarUpload} 
+              />
+            </div>
+            <div className="space-y-1 text-center sm:text-left">
+              <h3 className="font-medium text-zinc-100">{usuario?.nome || "Carregando..."}</h3>
+              <p className="text-sm text-zinc-500">{usuario?.email}</p>
+              <Badge variant="outline" className="mt-1 border-zinc-700 text-zinc-400">
+                {usuario?.cargo}
+              </Badge>
+            </div>
+          </div>
+
+          <Separator className="bg-zinc-800" />
+
+          <div className="grid gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="nome">Nome completo</Label>
+              <Input 
+                id="nome"
+                value={nome} 
+                onChange={(e) => setNome(e.target.value)} 
+                className="bg-zinc-900 border-zinc-800"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email (não editável)</Label>
+              <Input 
+                id="email"
+                value={usuario?.email || ""} 
+                disabled 
+                className="bg-zinc-900 border-zinc-800 opacity-50"
+              />
+            </div>
+          </div>
+
+          <Button onClick={handleSave} disabled={isSaving || !nome.trim()}>
+            {isSaving ? "Salvando..." : "Salvar alterações"}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
