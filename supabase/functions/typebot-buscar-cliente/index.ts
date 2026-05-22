@@ -41,16 +41,19 @@ Deno.serve(async (req) => {
       .select("id, nome")
       .eq("telefone", telefone)
       .eq("oficina_id", oficina_id)
-      .maybeSingle();
+      .order("created_at", { ascending: false })
+      .limit(1);
 
     if (error) {
       throw error;
     }
 
+    const cliente = data && data.length > 0 ? data[0] : null;
+
     const response = {
-      cliente_id: data?.id ?? null,
-      cliente_nome: data?.nome ?? null,
-      encontrado: !!data,
+      cliente_id: cliente?.id ?? null,
+      cliente_nome: cliente?.nome ?? null,
+      encontrado: !!cliente,
     };
 
     return new Response(JSON.stringify(response), {
