@@ -33,20 +33,38 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data, error } = await supabase
+    // First, check if client already exists
+    const { data: existingClient } = await supabase
       .from("clientes")
-      .upsert({
-        nome,
-        telefone,
-        oficina_id,
-      }, { 
-        onConflict: 'telefone, oficina_id',
-        ignoreDuplicates: false 
-      })
       .select("id")
+      .eq("telefone", telefone)
+      .eq("oficina_id", oficina_id)
       .maybeSingle();
 
-    if (error) {
+    let resultId;
+    
+    if (existingClient) {
+      // Update existing client
+      const { data, error: updateError } = await supabase
+        .from("clientes")
+        .update({ nome })
+        .eq("id", existingClient.id)
+        .select("id")
+        .single();
+        
+      if (updateError) throw updateError;
+      resultId = data.id;
+    } else {
+      // Insert new client
+      const { data, error: insertError } = await supabase
+        .from("clientes")
+        .insert({ nome, telefone, oficina_id })
+        .select("id")
+        .single();
+        
+      if (insertError) throw insertError;
+      resultId = data.id;
+    }
       return new Response(
         JSON.stringify({ sucesso: false, erro: error.message }),
         {
