@@ -16,6 +16,9 @@ export type OficinaAdmin = {
   plano_nome: string | null;
   plano_preco: number | null;
   typebot_slug: string | null;
+  evolution_api_url: string | null;
+  evolution_api_key: string | null;
+  evolution_instance_name: string | null;
   total_usuarios: number;
   total_ordens: number;
   ultima_atividade: string | null;
