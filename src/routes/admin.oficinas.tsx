@@ -242,6 +242,12 @@ function AdminOficinas() {
                         >
                           <Pencil className="h-4 w-4 text-blue-400" /> Editar oficina
                         </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="cursor-pointer gap-2 focus:bg-zinc-800"
+                          onClick={() => setDetalhesOpen(o)}
+                        >
+                          <Eye className="h-4 w-4 text-zinc-400" /> Ver detalhes & Integração
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator className="bg-zinc-800" />
                         <DropdownMenuItem
                           className="cursor-pointer gap-2 focus:bg-zinc-800"
