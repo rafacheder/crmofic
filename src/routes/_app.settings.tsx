@@ -213,7 +213,7 @@ function ProfileTab() {
                 id="nome"
                 value={nome} 
                 onChange={(e) => setNome(e.target.value)} 
-                className="bg-zinc-900 border-zinc-800"
+                className="bg-background"
               />
             </div>
             <div className="space-y-2">
@@ -222,7 +222,7 @@ function ProfileTab() {
                 id="email"
                 value={usuario?.email || ""} 
                 disabled 
-                className="bg-zinc-900 border-zinc-800 opacity-50"
+                className="bg-muted text-muted-foreground"
               />
             </div>
           </div>
