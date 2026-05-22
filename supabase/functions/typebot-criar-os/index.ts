@@ -47,19 +47,54 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // 1. Busca se já existe um veículo com a placa para o cliente
+    let { data: veiculo, error: searchError } = await supabase
+      .from("veiculos")
+      .select("id")
+      .eq("placa", veiculo_placa)
+      .eq("cliente_id", cliente_id)
+      .maybeSingle();
+
+    if (searchError) {
+      console.error("Erro ao buscar veículo:", searchError);
+    }
+
+    let veiculo_id = veiculo?.id;
+
+    // 2. Se não existir, cria o veículo
+    if (!veiculo_id) {
+      const { data: newVeiculo, error: insertError } = await supabase
+        .from("veiculos")
+        .insert({
+          placa: veiculo_placa,
+          cliente_id,
+          oficina_id,
+        })
+        .select("id")
+        .single();
+
+      if (insertError) {
+        return new Response(
+          JSON.stringify({ sucesso: false, erro: `Erro ao criar veículo: ${insertError.message}` }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+      veiculo_id = newVeiculo.id;
+    }
+
     // Gera um número no formato WPP- + 6 dígitos aleatórios
     const randomDigits = Math.floor(100000 + Math.random() * 900000).toString();
     const osNumero = `WPP-${randomDigits}`;
-    const reclamacao = `Placa: ${veiculo_placa} | ${descricao_problema}`;
-
-    // Insere na tabela ordens_servico
+    
+    // 3. Ao criar a OS, usa o veiculo_id e salva apenas a descrição
     const { data, error } = await supabase
       .from("ordens_servico")
       .insert({
         cliente_id,
         oficina_id,
+        veiculo_id,
         numero: osNumero,
-        reclamacao,
+        reclamacao: descricao_problema,
       })
       .select("numero")
       .single();
