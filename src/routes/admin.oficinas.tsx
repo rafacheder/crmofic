@@ -53,6 +53,7 @@ function AdminOficinas() {
   const [novoPlanoId, setNovoPlanoId] = useState<string>("");
   const [novaOpen, setNovaOpen] = useState(false);
   const [editarOpen, setEditarOpen] = useState<OficinaAdmin | null>(null);
+  const [detalhesOpen, setDetalhesOpen] = useState<OficinaAdmin | null>(null);
   const [novaForm, setNovaForm] = useState<OficinaForm>(EMPTY_FORM);
   const [editForm, setEditForm] = useState<OficinaForm>(EMPTY_FORM);
 
