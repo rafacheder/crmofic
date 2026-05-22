@@ -19,7 +19,7 @@ export function WhatsAppIntegrationGuide({ oficina }: WhatsAppIntegrationGuidePr
 
   const portalUrl = "https://crmofic.lovable.app";
   const typebotServerUrl = "https://builder.lcrplay.com";
-  const evolutionApiUrl = "https://evolution.lcrplay.com"; // Assuming a default or placeholder
+  const evolutionApiUrl = "https://wpp.lcrplay.com/manager/"; // Assuming a default or placeholder
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
