@@ -2,3 +2,6 @@ project_id = "cpcsytqeyeskyvnvnxul"
 
 [functions.typebot-buscar-cliente]
 verify_jwt = false
+
+[functions.typebot-criar-cliente]
+verify_jwt = false
