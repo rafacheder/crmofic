@@ -63,6 +63,7 @@ async function typebotChat(params: {
 
   // Start session per message using sessionId for continuity
   const startUrl = `${base}/api/v1/typebots/${params.typebotSlug}/startChat`;
+  console.log("Calling Typebot:", startUrl, "Session:", params.sessionId);
   const startRes = await fetch(startUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
