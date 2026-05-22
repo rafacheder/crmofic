@@ -105,7 +105,7 @@ function ProfileTab() {
       const { error } = await supabase
         .from("usuarios")
         .update({ nome })
-        .eq("id", usuario?.id);
+        .eq("id", usuario?.id || "");
 
       if (error) throw error;
       await refreshUsuario();
