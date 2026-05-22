@@ -500,6 +500,83 @@ function AdminOficinas() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog: Detalhes e Integração */}
+      <Dialog open={!!detalhesOpen} onOpenChange={(o) => !o && setDetalhesOpen(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto border-zinc-700 bg-zinc-900 text-zinc-100 sm:max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Detalhes da Oficina</DialogTitle>
+            <p className="text-sm text-zinc-400">{detalhesOpen?.nome}</p>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+            <div className="space-y-3 bg-zinc-950/50 p-4 rounded-lg border border-zinc-800">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Informações Gerais</h3>
+              <div className="grid grid-cols-2 gap-y-3 text-sm">
+                <div>
+                  <p className="text-zinc-500 text-xs">E-mail</p>
+                  <p className="text-zinc-200">{detalhesOpen?.email || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 text-xs">Telefone</p>
+                  <p className="text-zinc-200">{detalhesOpen?.telefone || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 text-xs">CNPJ</p>
+                  <p className="text-zinc-200">{detalhesOpen?.cnpj || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 text-xs">Status</p>
+                  <StatusBadge status={detalhesOpen?.status || "trial"} />
+                </div>
+                <div className="col-span-2">
+                  <p className="text-zinc-500 text-xs">Endereço</p>
+                  <p className="text-zinc-200">{detalhesOpen?.endereco || "—"}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3 bg-zinc-950/50 p-4 rounded-lg border border-zinc-800">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Assinatura</h3>
+              <div className="grid grid-cols-2 gap-y-3 text-sm">
+                <div>
+                  <p className="text-zinc-500 text-xs">Plano Atual</p>
+                  <p className="text-zinc-200">{detalhesOpen?.plano_nome || "Sem plano"}</p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 text-xs">Faturamento</p>
+                  <p className="text-zinc-200">R$ {detalhesOpen?.plano_preco || "0,00"}/mês</p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 text-xs">Usuários</p>
+                  <p className="text-zinc-200">{detalhesOpen?.total_usuarios || 0}</p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 text-xs">Total de OS</p>
+                  <p className="text-zinc-200">{detalhesOpen?.total_ordens || 0}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {detalhesOpen && <WhatsAppIntegrationGuide oficina={detalhesOpen} />}
+
+          <DialogFooter className="mt-6">
+            <Button variant="ghost" onClick={() => setDetalhesOpen(null)} className="text-zinc-400">Fechar</Button>
+            <Button 
+              onClick={() => {
+                if (detalhesOpen) {
+                  openEditar(detalhesOpen);
+                  setDetalhesOpen(null);
+                }
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Editar dados da oficina
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
