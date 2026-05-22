@@ -1016,7 +1016,12 @@ export type Database = {
         Returns: undefined
       }
       get_oficina_id: { Args: never; Returns: string }
+      get_public_order: { Args: { p_token: string }; Returns: Json }
       is_super_admin: { Args: never; Returns: boolean }
+      update_public_order_status: {
+        Args: { p_status: string; p_token: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
