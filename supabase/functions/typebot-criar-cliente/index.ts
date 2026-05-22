@@ -2,7 +2,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
@@ -13,13 +13,25 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { nome, telefone, oficina_id } = await req.json();
+    let nome, telefone, oficina_id;
+
+    if (req.method === "GET") {
+      const url = new URL(req.url);
+      nome = url.searchParams.get("nome");
+      telefone = url.searchParams.get("telefone");
+      oficina_id = url.searchParams.get("oficina_id");
+    } else {
+      const body = await req.json();
+      nome = body.nome;
+      telefone = body.telefone;
+      oficina_id = body.oficina_id;
+    }
 
     if (!nome || !telefone || !oficina_id) {
       return new Response(
         JSON.stringify({ 
           sucesso: false, 
-          erro: "Os campos nome, telefone e oficina_id são obrigatórios no body" 
+          erro: "Os campos nome, telefone e oficina_id são obrigatórios" 
         }),
         {
           status: 400,
