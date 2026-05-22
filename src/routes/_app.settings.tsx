@@ -129,7 +129,7 @@ function ProfileTab() {
     setIsUploading(true);
     try {
       const fileExt = file.name.split(".").pop();
-      const filePath = `${usuario.id}/${Math.random()}.${fileExt}`;
+      const filePath = `${usuario.id}/${Math.random()}.${fileExt || 'jpg'}`;
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
