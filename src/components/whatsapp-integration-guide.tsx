@@ -3,47 +3,96 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Copy, Check, ExternalLink, MessageCircle, AlertCircle } from "lucide-react";
+import { Copy, Check, ExternalLink, MessageCircle, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { OficinaAdmin } from "@/hooks/useAdmin";
-import { supabase } from "@/integrations/supabase/client";
+import { OficinaAdmin, useAdmin } from "@/hooks/useAdmin";
+import { testEvolutionConnection } from "@/lib/evolution.functions";
+import { useServerFn } from "@tanstack/react-start";
 
 interface WhatsAppIntegrationGuideProps {
   oficina: OficinaAdmin;
 }
 
 export function WhatsAppIntegrationGuide({ oficina }: WhatsAppIntegrationGuideProps) {
+  const { editarOficina } = useAdmin();
+  const testConn = useServerFn(testEvolutionConnection);
+
   const [typebotSlug, setTypebotSlug] = useState(oficina.typebot_slug || "");
-  const [isSaving, setIsSaving] = useState(false);
+  const [evolutionUrl, setEvolutionUrl] = useState(oficina.evolution_api_url || "");
+  const [evolutionKey, setEvolutionKey] = useState(oficina.evolution_api_key || "");
+  const [evolutionInstance, setEvolutionInstance] = useState(oficina.evolution_instance_name || "");
+  
+  const [isSaving, setIsSaving] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState<Record<string, boolean>>({});
+  const [connectionStatus, setConnectionStatus] = useState<{
+    status: "connected" | "disconnected" | "error" | "idle";
+    message?: string;
+  }>({ status: "idle" });
 
   const portalUrl = "https://crmofic.lovable.app";
   const typebotServerUrl = "https://builder.lcrplay.com";
-  const evolutionApiUrl = "https://wpp.lcrplay.com/manager/"; // Assuming a default or placeholder
+  const managerUrl = "https://wpp.lcrplay.com/manager/";
 
   const copyToClipboard = (text: string, id: string) => {
+    if (!text) return;
     navigator.clipboard.writeText(text);
     setIsCopied({ ...isCopied, [id]: true });
-    toast.success("Copiado para a área de transferência");
+    toast.success("Copiado!");
     setTimeout(() => {
       setIsCopied((prev) => ({ ...prev, [id]: false }));
     }, 2000);
   };
 
-  const handleSaveSlug = async () => {
-    setIsSaving(true);
+  const handleSaveField = async (field: "typebot_slug" | "evolution") => {
+    setIsSaving(field);
     try {
-      const { error } = await supabase
-        .from("oficinas")
-        .update({ typebot_slug: typebotSlug })
-        .eq("id", oficina.id);
+      const payload: any = { oficina_id: oficina.id };
+      if (field === "typebot_slug") {
+        payload.typebot_slug = typebotSlug;
+      } else {
+        payload.evolution_api_url = evolutionUrl;
+        payload.evolution_api_key = evolutionKey;
+        payload.evolution_instance_name = evolutionInstance;
+      }
 
-      if (error) throw error;
-      toast.success("Slug do Typebot salvo com sucesso!");
+      await editarOficina(payload);
+      toast.success("Configurações salvas!");
     } catch (error: any) {
-      toast.error("Erro ao salvar slug: " + error.message);
+      toast.error("Erro ao salvar: " + error.message);
     } finally {
-      setIsSaving(false);
+      setIsSaving(null);
+    }
+  };
+
+  const handleTestConnection = async () => {
+    if (!evolutionUrl || !evolutionKey || !evolutionInstance) {
+      toast.error("Preencha todos os campos da Evolution API primeiro.");
+      return;
+    }
+
+    setConnectionStatus({ status: "idle" });
+    try {
+      const result = await testConn({
+        data: {
+          url: evolutionUrl,
+          apiKey: evolutionKey,
+          instanceName: evolutionInstance,
+        }
+      });
+      
+      setConnectionStatus({ 
+        status: result.status as any, 
+        message: result.message 
+      });
+
+      if (result.status === "connected") {
+        toast.success("Conexão estabelecida com sucesso!");
+      } else {
+        toast.warning(result.message);
+      }
+    } catch (error: any) {
+      setConnectionStatus({ status: "error", message: error.message });
+      toast.error("Erro ao testar conexão");
     }
   };
 
@@ -97,11 +146,11 @@ export function WhatsAppIntegrationGuide({ oficina }: WhatsAppIntegrationGuidePr
                 className="border-zinc-700 bg-zinc-800 text-zinc-100"
               />
               <Button 
-                onClick={handleSaveSlug} 
-                disabled={isSaving}
+                onClick={() => handleSaveField("typebot_slug")} 
+                disabled={isSaving === "typebot_slug"}
                 className="bg-emerald-600 hover:bg-emerald-700 shrink-0"
               >
-                {isSaving ? "..." : "Salvar"}
+                {isSaving === "typebot_slug" ? <RefreshCw className="h-4 w-4 animate-spin" /> : "Salvar"}
               </Button>
             </div>
           </div>
@@ -111,16 +160,77 @@ export function WhatsAppIntegrationGuide({ oficina }: WhatsAppIntegrationGuidePr
     {
       id: 3,
       title: "Passo 3 — Evolution API",
-      instruction: "Crie uma nova instância no Evolution API com o nome da oficina. Conecte o WhatsApp escaneando o QR Code.",
-      isComplete: false, // Cannot verify automatically
+      instruction: "Configure as credenciais da Evolution API e verifique a conexão com o WhatsApp.",
+      isComplete: connectionStatus.status === "connected",
       content: (
-        <div className="pt-2">
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <div>
+              <Label className="text-xs text-zinc-500">URL da API</Label>
+              <Input
+                value={evolutionUrl}
+                onChange={(e) => setEvolutionUrl(e.target.value)}
+                placeholder="https://api.seuservidor.com"
+                className="text-xs border-zinc-800 bg-zinc-950"
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-zinc-500">Global API Key</Label>
+              <Input
+                type="password"
+                value={evolutionKey}
+                onChange={(e) => setEvolutionKey(e.target.value)}
+                placeholder="Sua chave de API"
+                className="text-xs border-zinc-800 bg-zinc-950"
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-zinc-500">Nome da Instância</Label>
+              <Input
+                value={evolutionInstance}
+                onChange={(e) => setEvolutionInstance(e.target.value)}
+                placeholder="oficina-sarandi"
+                className="text-xs border-zinc-800 bg-zinc-950"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => handleSaveField("evolution")} 
+              disabled={isSaving === "evolution"}
+              variant="outline"
+              className="flex-1 border-zinc-800 hover:bg-zinc-800"
+            >
+              {isSaving === "evolution" ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}
+              Salvar Dados
+            </Button>
+            <Button 
+              onClick={handleTestConnection}
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+            >
+              Verificar Conexão
+            </Button>
+          </div>
+
+          {connectionStatus.status !== "idle" && (
+            <div className={`p-2 rounded border text-xs flex items-center gap-2 ${
+              connectionStatus.status === "connected" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :
+              connectionStatus.status === "disconnected" ? "bg-amber-500/10 border-amber-500/20 text-amber-400" :
+              "bg-red-500/10 border-red-500/20 text-red-400"
+            }`}>
+              {connectionStatus.status === "connected" ? <Check className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+              {connectionStatus.message || "Status desconhecido"}
+            </div>
+          )}
+
           <Button 
-            variant="outline" 
-            className="w-full gap-2 border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
-            onClick={() => window.open(evolutionApiUrl, "_blank")}
+            variant="ghost" 
+            size="sm"
+            className="w-full text-zinc-500 hover:text-zinc-300 text-[10px]"
+            onClick={() => window.open(managerUrl, "_blank")}
           >
-            Abrir Painel Evolution API <ExternalLink className="h-4 w-4" />
+            Abrir Painel Evolution API <ExternalLink className="ml-1 h-3 w-3" />
           </Button>
         </div>
       )
@@ -129,7 +239,7 @@ export function WhatsAppIntegrationGuide({ oficina }: WhatsAppIntegrationGuidePr
       id: 4,
       title: "Passo 4 — Conectar Evolution ao Typebot",
       instruction: "Na instância criada no Evolution API, configure o Typebot com a URL do servidor e o slug do bot salvo no passo 2.",
-      isComplete: !!typebotSlug,
+      isComplete: !!typebotSlug && connectionStatus.status === "connected",
       content: (
         <div className="space-y-3">
           {[
