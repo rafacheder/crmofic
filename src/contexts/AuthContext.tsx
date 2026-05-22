@@ -113,6 +113,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
   };
 
+  const refreshUsuario = async () => {
+    if (user) {
+      await fetchUsuarioEOficina(user.id);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -124,6 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signUp,
         signOut,
+        refreshUsuario,
       }}
     >
       {children}
