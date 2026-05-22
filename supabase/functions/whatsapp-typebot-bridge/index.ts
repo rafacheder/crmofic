@@ -176,7 +176,7 @@ Deno.serve(async (req) => {
       .eq("oficina_id", oficina.id)
       .maybeSingle();
 
-    const typebotUrl = config?.typebot_url || "https://builder.lcrplay.com";
+    const typebotUrl = config?.typebot_url || "https://chat.lcrplay.com";
 
     if (!oficina.typebot_slug || !oficina.evolution_api_url || !oficina.evolution_api_key) {
       return new Response(JSON.stringify({ error: "integration not configured" }), {
