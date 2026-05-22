@@ -128,7 +128,8 @@ Deno.serve(async (req) => {
     const event: string = payload.event || payload.type || "";
     console.log(`[Bridge] Event type: ${event}`);
 
-    if (event.toUpperCase() !== "MESSAGES_UPSERT") {
+    const normalizedEvent = event.toUpperCase().replace(/\./g, "_");
+    if (normalizedEvent !== "MESSAGES_UPSERT") {
       console.log(`[Bridge] Ignoring non-MESSAGES_UPSERT event: ${event}`);
       return new Response(JSON.stringify({ ignored: "event" }), {
         status: 200,
