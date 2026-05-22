@@ -5,3 +5,7 @@ verify_jwt = false
 
 [functions.typebot-criar-cliente]
 verify_jwt = false
+
+[functions.typebot-buscar-os]
+verify_jwt = false
+
