@@ -467,6 +467,9 @@ export type Database = {
           created_at: string | null
           email: string | null
           endereco: string | null
+          evolution_api_key: string | null
+          evolution_api_url: string | null
+          evolution_instance_name: string | null
           id: string
           logo_url: string | null
           nome: string
@@ -482,6 +485,9 @@ export type Database = {
           created_at?: string | null
           email?: string | null
           endereco?: string | null
+          evolution_api_key?: string | null
+          evolution_api_url?: string | null
+          evolution_instance_name?: string | null
           id?: string
           logo_url?: string | null
           nome: string
@@ -497,6 +503,9 @@ export type Database = {
           created_at?: string | null
           email?: string | null
           endereco?: string | null
+          evolution_api_key?: string | null
+          evolution_api_url?: string | null
+          evolution_instance_name?: string | null
           id?: string
           logo_url?: string | null
           nome?: string
@@ -964,24 +973,47 @@ export type Database = {
         }
         Returns: string
       }
-      admin_editar_oficina: {
-        Args: {
-          p_cnpj?: string
-          p_dono_email?: string
-          p_dono_nome?: string
-          p_dono_senha?: string
-          p_dono_user_id?: string
-          p_email?: string
-          p_endereco?: string
-          p_nome?: string
-          p_oficina_id: string
-          p_plano_id?: string
-          p_status?: string
-          p_telefone?: string
-          p_trial_ate?: string
-        }
-        Returns: undefined
-      }
+      admin_editar_oficina:
+        | {
+            Args: {
+              p_cnpj?: string
+              p_dono_email?: string
+              p_dono_nome?: string
+              p_dono_senha?: string
+              p_dono_user_id?: string
+              p_email?: string
+              p_endereco?: string
+              p_nome?: string
+              p_oficina_id: string
+              p_plano_id?: string
+              p_status?: string
+              p_telefone?: string
+              p_trial_ate?: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_cnpj?: string
+              p_dono_email?: string
+              p_dono_nome?: string
+              p_dono_senha?: string
+              p_dono_user_id?: string
+              p_email?: string
+              p_endereco?: string
+              p_evolution_api_key?: string
+              p_evolution_api_url?: string
+              p_evolution_instance_name?: string
+              p_nome?: string
+              p_oficina_id: string
+              p_plano_id?: string
+              p_status?: string
+              p_telefone?: string
+              p_trial_ate?: string
+              p_typebot_slug?: string
+            }
+            Returns: undefined
+          }
       admin_excluir_oficina: {
         Args: { p_oficina_id: string }
         Returns: undefined
@@ -996,6 +1028,9 @@ export type Database = {
           dono_nome: string
           email: string
           endereco: string
+          evolution_api_key: string
+          evolution_api_url: string
+          evolution_instance_name: string
           id: string
           nome: string
           plano_id: string
@@ -1006,6 +1041,7 @@ export type Database = {
           total_ordens: number
           total_usuarios: number
           trial_ate: string
+          typebot_slug: string
           ultima_atividade: string
         }[]
       }
