@@ -33,18 +33,22 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // First, check if client already exists
-    const { data: existingClient } = await supabase
+    // Primeiro, verifica se o cliente já existe para esta oficina
+    const { data: existingClient, error: searchError } = await supabase
       .from("clientes")
       .select("id")
       .eq("telefone", telefone)
       .eq("oficina_id", oficina_id)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
+
+    if (searchError) throw searchError;
 
     let resultId;
     
     if (existingClient) {
-      // Update existing client
+      // Atualiza o nome do cliente existente
       const { data, error: updateError } = await supabase
         .from("clientes")
         .update({ nome })
@@ -55,7 +59,7 @@ Deno.serve(async (req) => {
       if (updateError) throw updateError;
       resultId = data.id;
     } else {
-      // Insert new client
+      // Insere novo cliente
       const { data, error: insertError } = await supabase
         .from("clientes")
         .insert({ nome, telefone, oficina_id })
@@ -65,19 +69,11 @@ Deno.serve(async (req) => {
       if (insertError) throw insertError;
       resultId = data.id;
     }
-      return new Response(
-        JSON.stringify({ sucesso: false, erro: error.message }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
-    }
 
     return new Response(
-      JSON.stringify({ cliente_id: data.id, sucesso: true }),
+      JSON.stringify({ cliente_id: resultId, sucesso: true }),
       {
-        status: 201,
+        status: 201, // 201 Created
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
