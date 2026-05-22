@@ -973,47 +973,28 @@ export type Database = {
         }
         Returns: string
       }
-      admin_editar_oficina:
-        | {
-            Args: {
-              p_cnpj?: string
-              p_dono_email?: string
-              p_dono_nome?: string
-              p_dono_senha?: string
-              p_dono_user_id?: string
-              p_email?: string
-              p_endereco?: string
-              p_nome?: string
-              p_oficina_id: string
-              p_plano_id?: string
-              p_status?: string
-              p_telefone?: string
-              p_trial_ate?: string
-            }
-            Returns: undefined
-          }
-        | {
-            Args: {
-              p_cnpj?: string
-              p_dono_email?: string
-              p_dono_nome?: string
-              p_dono_senha?: string
-              p_dono_user_id?: string
-              p_email?: string
-              p_endereco?: string
-              p_evolution_api_key?: string
-              p_evolution_api_url?: string
-              p_evolution_instance_name?: string
-              p_nome?: string
-              p_oficina_id: string
-              p_plano_id?: string
-              p_status?: string
-              p_telefone?: string
-              p_trial_ate?: string
-              p_typebot_slug?: string
-            }
-            Returns: undefined
-          }
+      admin_editar_oficina: {
+        Args: {
+          p_cnpj?: string
+          p_dono_email?: string
+          p_dono_nome?: string
+          p_dono_senha?: string
+          p_dono_user_id?: string
+          p_email?: string
+          p_endereco?: string
+          p_evolution_api_key?: string
+          p_evolution_api_url?: string
+          p_evolution_instance_name?: string
+          p_nome?: string
+          p_oficina_id: string
+          p_plano_id?: string
+          p_status?: string
+          p_telefone?: string
+          p_trial_ate?: string
+          p_typebot_slug?: string
+        }
+        Returns: undefined
+      }
       admin_excluir_oficina: {
         Args: { p_oficina_id: string }
         Returns: undefined
