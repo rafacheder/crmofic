@@ -15,6 +15,7 @@ export type OficinaAdmin = {
   plano_id: string | null;
   plano_nome: string | null;
   plano_preco: number | null;
+  typebot_slug: string | null;
   total_usuarios: number;
   total_ordens: number;
   ultima_atividade: string | null;
