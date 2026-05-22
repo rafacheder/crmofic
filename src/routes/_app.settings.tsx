@@ -196,7 +196,7 @@ function ProfileTab() {
               />
             </div>
             <div className="space-y-1 text-center sm:text-left">
-              <h3 className="font-medium text-zinc-100">{usuario?.nome || "Carregando..."}</h3>
+              <h3 className="font-medium text-slate-800">{usuario?.nome || "Carregando..."}</h3>
               <p className="text-sm text-zinc-500">{usuario?.email}</p>
               <Badge variant="outline" className="mt-1 border-zinc-700 text-zinc-400">
                 {usuario?.cargo}
