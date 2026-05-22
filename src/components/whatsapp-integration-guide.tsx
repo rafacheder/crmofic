@@ -171,7 +171,7 @@ export function WhatsAppIntegrationGuide({ oficina }: WhatsAppIntegrationGuidePr
                 value={evolutionUrl}
                 onChange={(e) => setEvolutionUrl(e.target.value)}
                 placeholder="https://api.seuservidor.com"
-                className="text-xs border-zinc-800 bg-zinc-950"
+                className="text-xs border-zinc-800 bg-zinc-950 text-slate-300"
               />
             </div>
             <div>
@@ -181,7 +181,7 @@ export function WhatsAppIntegrationGuide({ oficina }: WhatsAppIntegrationGuidePr
                 value={evolutionKey}
                 onChange={(e) => setEvolutionKey(e.target.value)}
                 placeholder="Sua chave de API"
-                className="text-xs border-zinc-800 bg-zinc-950"
+                className="text-xs border-zinc-800 bg-zinc-950 text-slate-300"
               />
             </div>
             <div>
@@ -190,7 +190,7 @@ export function WhatsAppIntegrationGuide({ oficina }: WhatsAppIntegrationGuidePr
                 value={evolutionInstance}
                 onChange={(e) => setEvolutionInstance(e.target.value)}
                 placeholder="oficina-sarandi"
-                className="text-xs border-zinc-800 bg-zinc-950"
+                className="text-xs border-zinc-800 bg-zinc-950 text-slate-300"
               />
             </div>
           </div>
