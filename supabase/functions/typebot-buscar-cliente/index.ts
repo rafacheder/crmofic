@@ -18,15 +18,18 @@ Deno.serve(async (req) => {
 
   try {
     let telefone: string | null = null;
+    let telefone_digitado: string | null = null;
     let oficina_id: string | null = null;
 
     if (req.method === "POST") {
       const body = await req.json();
       telefone = body?.telefone ?? null;
+      telefone_digitado = body?.telefone_digitado ?? null;
       oficina_id = body?.oficina_id ?? null;
     } else {
       const url = new URL(req.url);
       telefone = url.searchParams.get("telefone");
+      telefone_digitado = url.searchParams.get("telefone_digitado");
       oficina_id = url.searchParams.get("oficina_id");
     }
 
