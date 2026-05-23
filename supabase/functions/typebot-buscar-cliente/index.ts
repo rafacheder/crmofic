@@ -18,15 +18,18 @@ Deno.serve(async (req) => {
 
   try {
     let telefone: string | null = null;
+    let telefone_digitado: string | null = null;
     let oficina_id: string | null = null;
 
     if (req.method === "POST") {
       const body = await req.json();
       telefone = body?.telefone ?? null;
+      telefone_digitado = body?.telefone_digitado ?? null;
       oficina_id = body?.oficina_id ?? null;
     } else {
       const url = new URL(req.url);
       telefone = url.searchParams.get("telefone");
+      telefone_digitado = url.searchParams.get("telefone_digitado");
       oficina_id = url.searchParams.get("oficina_id");
     }
 
@@ -40,8 +43,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Se telefone vazio, retorna encontrado: false sem erro
-    if (!telefone || telefone.trim() === "") {
+    // Determina qual número usar para busca: telefone principal ou telefone_digitado
+    let numeroBusca = "";
+    if (telefone && telefone.trim() !== "") {
+      numeroBusca = telefone.trim();
+    } else if (telefone_digitado && telefone_digitado.trim() !== "") {
+      numeroBusca = telefone_digitado.trim();
+    }
+
+    // Se nenhum telefone preenchido, retorna encontrado: false sem erro
+    if (!numeroBusca) {
       return new Response(
         JSON.stringify({ cliente_id: null, cliente_nome: null, encontrado: false }),
         {
@@ -51,14 +62,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    const telefoneLimpo = telefone.trim();
-
     // Monta variações do número: com e sem 55 na frente
-    const telefonesBusca: string[] = [telefoneLimpo];
-    if (telefoneLimpo.startsWith("55") && telefoneLimpo.length > 2) {
-      telefonesBusca.push(telefoneLimpo.slice(2));
+    const telefonesBusca: string[] = [numeroBusca];
+    if (numeroBusca.startsWith("55") && numeroBusca.length > 2) {
+      telefonesBusca.push(numeroBusca.slice(2));
     } else {
-      telefonesBusca.push("55" + telefoneLimpo);
+      telefonesBusca.push("55" + numeroBusca);
     }
 
     const supabase = createClient(
