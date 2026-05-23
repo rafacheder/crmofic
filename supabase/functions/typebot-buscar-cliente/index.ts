@@ -30,14 +30,35 @@ Deno.serve(async (req) => {
       oficina_id = url.searchParams.get("oficina_id");
     }
 
-    if (!telefone || !oficina_id) {
+    if (!oficina_id) {
       return new Response(
-        JSON.stringify({ error: "Parâmetros telefone e oficina_id são obrigatórios" }),
+        JSON.stringify({ error: "Parâmetro oficina_id é obrigatório" }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );
+    }
+
+    // Se telefone vazio, retorna encontrado: false sem erro
+    if (!telefone || telefone.trim() === "") {
+      return new Response(
+        JSON.stringify({ cliente_id: null, cliente_nome: null, encontrado: false }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    const telefoneLimpo = telefone.trim();
+
+    // Monta variações do número: com e sem 55 na frente
+    const telefonesBusca: string[] = [telefoneLimpo];
+    if (telefoneLimpo.startsWith("55") && telefoneLimpo.length > 2) {
+      telefonesBusca.push(telefoneLimpo.slice(2));
+    } else {
+      telefonesBusca.push("55" + telefoneLimpo);
     }
 
     const supabase = createClient(
@@ -48,8 +69,8 @@ Deno.serve(async (req) => {
     const { data, error } = await supabase
       .from("clientes")
       .select("id, nome")
-      .eq("telefone", telefone)
       .eq("oficina_id", oficina_id)
+      .in("telefone", telefonesBusca)
       .order("created_at", { ascending: false })
       .limit(1);
 
